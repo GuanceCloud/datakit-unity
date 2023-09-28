@@ -43,22 +43,24 @@ namespace FTSDK.Unity
                 serverUrl = "http://10.0.0.1:9529",
                 envType = "prod",
                 debug = true,
-                serviceName = "Your Services",
-                globalContext = new Dictionary<string, string>{
-                    {"custom_key","custom value"}
-                }
+                // serviceName = "Your Services",
+                // globalContext = new Dictionary<string, string>{
+                //     {"custom_key","custom value"}
+                // }
 
             });
 
+            //对应修改  androidAppId 和 iOSAppId
             FTUnityBridge.InitRUMConfig(new RUMConfig()
             {
-                androidAppId = null,
+                androidAppId = "appid_androidAppId",
                 iOSAppId = "appid_iOSAppId",
                 sampleRate = 0.8f,
-                enableNativeUserResource = true,
-                globalContext = new Dictionary<string, string>{
-                    {"rum_custom","rum custom value"}
-                }
+                extraMonitorTypeWithError = ErrorMonitorType.All
+                // enableNativeUserResource = true,
+                // globalContext = new Dictionary<string, string>{
+                //     {"rum_custom","rum custom value"}
+                // }
             });
 
             FTUnityBridge.InitLogConfig(new LogConfig
@@ -66,17 +68,17 @@ namespace FTSDK.Unity
                 sampleRate = 0.9f,
                 enableCustomLog = true,
                 enableLinkRumData = true,
-                globalContext = new Dictionary<string, string>{
-                    {"log_custom","log custom value"}
-                }
+                logLevelFilters = new List<LogLevel> { LogLevel.Info }
+                // globalContext = new Dictionary<string, string>{
+                //     {"log_custom","log custom value"}
+                // }
             });
 
             FTUnityBridge.InitTraceConfig(new TraceConfig
             {
                 sampleRate = 0.9f,
-                traceType = "ddtrace",
-                enableAutoTrace = true,
-                enableLinkRumData = true
+                enableLinkRumData = true,
+                traceType = TraceType.DDTrace
 
             });
 
@@ -106,11 +108,12 @@ namespace FTSDK.Unity
             ///开启崩溃监听和日志 Debug.Log 日志监听取消以下代码注释
             // if (type == LogType.Exception)
             // {
-            //     FTUnityBridge.AddError(stackTrace, condition, "native_crash", "run");
+            //     FTUnityBridge.AddError(stackTrace, condition);
             // }
             // else
             // {
-            //     FTUnityBridge.AddLog(condition, stackTrace);
+
+            //     FTUnityBridge.AddLog(condition, LogLevel.Info);
             // }
 
         }

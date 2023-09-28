@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FTSDK.Unity.Bridge;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -27,7 +29,7 @@ public class ClickEvent : MonoBehaviour
 
     public void AddError()
     {
-        FTUnityBridge.AddError("Custom Error Log", "Error Log", "native_crash", "run");
+        FTUnityBridge.AddError("Custom Error Log", "Error Log");
     }
 
     public void AddAction()
@@ -35,10 +37,11 @@ public class ClickEvent : MonoBehaviour
         FTUnityBridge.StartAction("AddAction", "click");
     }
 
-    public void BinderUser(){
+    public void BinderUser()
+    {
         FTUnityBridge.BindUserData("someone_user_id");
     }
-    
+
     public void NetRequest()
     {
         String resourceId = "unique id";
@@ -74,7 +77,9 @@ public class ClickEvent : MonoBehaviour
                     FTUnityBridge.StopResource(resourceId);
                     ResourceParams resourceParams = new ResourceParams();
                     resourceParams.url = url;
-                    resourceParams.requestHeader = client.DefaultRequestHeaders + "";
+                    resourceParams.requestHeader = client.DefaultRequestHeaders.ToDictionary(header => header.Key, header => string.Join(",", header.Value));
+                    resourceParams.responseHeader = response.Headers.ToDictionary(header => header.Key, header => string.Join(",", header.Value));
+                    
                     resourceParams.resourceStatus = (int)response.StatusCode;
                     resourceParams.responseBody = responseData;
                     resourceParams.resourceMethod = "GET";

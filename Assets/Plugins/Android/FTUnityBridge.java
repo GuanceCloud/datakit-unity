@@ -212,42 +212,12 @@ public class FTUnityBridge {
         boolean enableNativeUserResource = data.optBoolean("enableNativeUserResource");
         rumConfig.setEnableTraceUserAction(enableNativeUserResource);
 
-        Object errorType = data.opt("extraMonitorTypeWithError");
-        if (errorType != null) {
-            int errorMonitorType = ErrorMonitorType.NO_SET;
-            if (errorType instanceof String) {
-                if (errorType.equals("all")) {
-                    errorMonitorType = ErrorMonitorType.ALL.getValue();
-                } else if (errorType.equals("battery")) {
-                    errorMonitorType = ErrorMonitorType.BATTERY.getValue();
-                } else if (errorType.equals("memory")) {
-                    errorMonitorType = ErrorMonitorType.MEMORY.getValue();
-                } else if (errorType.equals("cpu")) {
-                    errorMonitorType = ErrorMonitorType.CPU.getValue();
-                }
-            } else if (errorType instanceof JSONArray) {
-                JSONArray errorTypeArr = (JSONArray) errorType;
-                for (int i = 0; i < errorTypeArr.length(); i++) {
-                    String errorTypeStr = errorTypeArr.optString(i);
-                    if (errorTypeStr.equals("all")) {
-                        errorMonitorType |= ErrorMonitorType.ALL.getValue();
-                    } else if (errorTypeStr.equals("battery")) {
-                        errorMonitorType |= ErrorMonitorType.BATTERY.getValue();
-                    } else if (errorTypeStr.equals("memory")) {
-                        errorMonitorType |= ErrorMonitorType.MEMORY.getValue();
-                    } else if (errorTypeStr.equals("cpu")) {
-                        errorMonitorType |= ErrorMonitorType.CPU.getValue();
-                    }
-                }
-            }
-            rumConfig.setExtraMonitorTypeWithError(errorMonitorType);
-
-        }
+        int errorMonitorType = data.optInt("extraMonitorTypeWithError", ErrorMonitorType.NO_SET);
+        rumConfig.setExtraMonitorTypeWithError(errorMonitorType);
 
         Object deviceType = data.opt("deviceMonitorType");
         if (deviceType != null) {
             String detectFrequencyStr = data.optString("detectFrequency", null);
-
             DetectFrequency detectFrequency = DetectFrequency.DEFAULT;
             if (detectFrequencyStr != null) {
                 if (detectFrequencyStr.equals("frequent")) {
@@ -256,37 +226,7 @@ public class FTUnityBridge {
                     detectFrequency = DetectFrequency.RARE;
                 }
             }
-
-            int deviceMonitorType = DeviceMetricsMonitorType.NO_SET;
-            if (deviceType instanceof String) {
-                if (deviceType.equals("all")) {
-                    deviceMonitorType = DeviceMetricsMonitorType.ALL.getValue();
-                } else if (deviceType.equals("battery")) {
-                    deviceMonitorType = DeviceMetricsMonitorType.BATTERY.getValue();
-                } else if (deviceType.equals("memory")) {
-                    deviceMonitorType = DeviceMetricsMonitorType.MEMORY.getValue();
-                } else if (deviceType.equals("cpu")) {
-                    deviceMonitorType = DeviceMetricsMonitorType.CPU.getValue();
-                } else if (deviceType.equals("fps")) {
-                    deviceMonitorType = DeviceMetricsMonitorType.FPS.getValue();
-                }
-            } else if (deviceType instanceof JSONArray) {
-                JSONArray deviceTypeArr = (JSONArray) deviceType;
-                for (int i = 0; i < deviceTypeArr.length(); i++) {
-                    String deviceTypeStr = deviceTypeArr.optString(i);
-                    if (deviceTypeStr.equals("all")) {
-                        deviceMonitorType |= DeviceMetricsMonitorType.ALL.getValue();
-                    } else if (deviceTypeStr.equals("battery")) {
-                        deviceMonitorType |= DeviceMetricsMonitorType.BATTERY.getValue();
-                    } else if (deviceTypeStr.equals("memory")) {
-                        deviceMonitorType |= DeviceMetricsMonitorType.MEMORY.getValue();
-                    } else if (deviceTypeStr.equals("cpu")) {
-                        deviceMonitorType |= DeviceMetricsMonitorType.CPU.getValue();
-                    } else if (deviceTypeStr.equals("fps")) {
-                        deviceMonitorType |= DeviceMetricsMonitorType.FPS.getValue();
-                    }
-                }
-            }
+            int deviceMonitorType = data.optInt("deviceMonitorType", DeviceMetricsMonitorType.NO_SET);
             rumConfig.setDeviceMetricsMonitorType(deviceMonitorType, detectFrequency);
         }
 
@@ -397,11 +337,14 @@ public class FTUnityBridge {
         ResourceParams params = new ResourceParams();
         if (resourceParams != null) {
             params.url = resourceParams.optString("url");
-            params.resourceMethod = resourceParams.optString("httpMethod");
+            params.resourceMethod = resourceParams.optString("resourceMethod");
             params.requestHeader = resourceParams.optString("requestHeader");
             params.responseHeader = resourceParams.optString("responseHeader");
             params.responseBody = resourceParams.optString("responseBody");
             params.resourceStatus = resourceParams.optInt("resourceStatus");
+            params.responseConnection = resourceParams.optString("responseConnection");
+            params.responseContentEncoding = resourceParams.optString("responseContentEncoding");
+            params.responseContentType = resourceParams.optString("responseContentType");
         }
 
         JSONObject netStatus = data.optJSONObject("netStatus");

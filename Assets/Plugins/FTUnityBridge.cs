@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Security.Authentication.ExtendedProtection;
 using Unity.VisualScripting;
+using Newtonsoft.Json.Converters;
 
 
 
@@ -80,15 +81,15 @@ namespace FTSDK.Unity.Bridge
         /// <summary>
         /// 错误监控补充类型：all、battery、 memory、 cpu
         /// </summary>
-        public List<string> extraMonitorTypeWithError { get; set; }
+        public ErrorMonitorType extraMonitorTypeWithError { get; set; }
         /// <summary>
         /// 页面监控补充类型： all 、battery（仅Android支持)、 memory、cpu、fps
         /// </summary>
-        public List<string> deviceMonitorType { get; set; }
+        public DeviceMetricsMonitorType deviceMonitorType { get; set; }
         /// <summary>
         /// normal(默认)、 frequent、rare
         /// </summary>
-        public string detectFrequency { get; set; }
+        public DetectFrequency detectFrequency { get; set; }
 
     }
 
@@ -104,7 +105,7 @@ namespace FTSDK.Unity.Bridge
         /// <summary>
         /// 链路类型：ddTrace（默认）、zipkinMultiHeader、zipkinSingleHeader、traceparent、skywalking、jaeger
         /// </summary>
-        public string traceType { get; set; }
+        public TraceType traceType { get; set; }
         /// <summary>
         /// 是否与 RUM 数据关联，默认 false
         /// </summary>
@@ -143,15 +144,15 @@ namespace FTSDK.Unity.Bridge
         /// <summary>
         /// 日志丢弃策略：discard丢弃新数据（默认）、discardOldest丢弃旧数据
         /// </summary>
-        public string discardStrategy { get; set; }
+        public LogCacheDiscard discardStrategy { get; set; }
         /// <summary>
-        /// 日志等级过滤，数组中需填写 日志等级：info提示、warning警告、error错误、critical、ok恢复
+        /// 日志等级过滤，数组中需填写 日志等级：info提示、warning警告、error错误、critical、ok恢复，默认不过滤
         /// </summary>
-        public List<string> logLevelFilters { get; set; }
+        public List<LogLevel> logLevelFilters { get; set; }
         /// <summary>
         /// 添加 Log 全局属性
         /// </summary>
-        public Dictionary<string, string> globalContext { get; set; } = null;
+        public Dictionary<string, string> globalContext { get; set; }
     }
 
     /// <summary>
@@ -189,11 +190,11 @@ namespace FTSDK.Unity.Bridge
         /// <summary>
         /// 请求头
         /// </summary>
-        public string requestHeader { get; set; } = "";
+        public Dictionary<string, string> requestHeader { get; set; }
         /// <summary>
         /// 响应头
         /// </summary>
-        public string responseHeader { get; set; } = "";
+        public Dictionary<string, string> responseHeader { get; set; }
         /// <summary>
         /// 响应 connection
         /// </summary>
@@ -265,6 +266,83 @@ namespace FTSDK.Unity.Bridge
 
     }
 
+    /// <summary>
+    /// 错误附加数据
+    /// </summary>
+    public enum ErrorMonitorType : int
+    {
+        All = -1,
+        Battery = 1 << 1,
+        Memory = 1 << 2,
+        CPU = 1 << 3
+    }
+
+    /// <summary>
+    /// 页面监控指标
+    /// </summary>
+    public enum DeviceMetricsMonitorType : int
+    {
+        All = -1,
+        /// <summary>
+        /// 仅仅支持 Android
+        /// </summary>
+        Battery = 1 << 1,
+        Memory = 1 << 2,
+        CPU = 1 << 3,
+        FPS = 1 << 4
+    }
+
+    /// <summary>
+    /// 扫描周期
+    /// </summary>
+    public enum DetectFrequency { Normal, Frequent, Rare }
+
+    /// <summary>
+    /// 链路类型
+    /// </summary>
+    public enum TraceType
+    {
+        DDTrace,
+        ZipkinMultiHeader,
+        ZipkinSingleHeader,
+        Traceparent,
+        Skywalking,
+        Jaeger
+    }
+
+    public enum LogCacheDiscard { Discard, DiscardOldest }
+
+
+    /// <summary>
+    /// 日志等级
+    /// </summary>
+    public enum LogLevel
+    {
+        Info,
+        Warning,
+        Error,
+        Critical,
+        Ok,
+    }
+
+    public class BridgeEnumConverter : StringEnumConverter
+    {
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            if (value is ErrorMonitorType || value is DeviceMetricsMonitorType)
+            {
+                writer.WriteValue(Convert.ToInt64(value));
+            }
+            else if (value is DetectFrequency || value is TraceType || value is LogCacheDiscard || value is LogLevel)
+            {
+                writer.WriteValue(value.ToString().ToLower());
+            }
+            else
+            {
+                base.WriteJson(writer, value, serializer);
+            }
+        }
+    }
 
 
     /// <summary>
@@ -295,9 +373,10 @@ namespace FTSDK.Unity.Bridge
         private const string KEY_METHOD_GET_TRACE_HEADER = "GetTraceHeader";
         private const string KEY_METHOD_DE_INIT = "DeInit";
 
-        private static JsonSerializerSettings NULL_HANDLER = new JsonSerializerSettings
+        private static JsonSerializerSettings JSON_HANDLER = new JsonSerializerSettings
         {
-            NullValueHandling = NullValueHandling.Ignore
+            NullValueHandling = NullValueHandling.Ignore,
+            Converters = { new BridgeEnumConverter() }
         };
 
         /// <summary>
@@ -321,8 +400,12 @@ namespace FTSDK.Unity.Bridge
         /// <param name="config"></param>
         public static void Install(SDKConfig config)
         {
+            if (config.globalContext == null)
+            {
+                config.globalContext = new Dictionary<string, string>();
+            }
             config.globalContext.Add(KEY_UNITY_SDK_VERSION, SDK_VERSION);
-            _InovkeMethod(KEY_METHOD_INSTALL, JsonConvert.SerializeObject(config, NULL_HANDLER));
+            _InovkeMethod(KEY_METHOD_INSTALL, JsonConvert.SerializeObject(config, JSON_HANDLER));
         }
 
         /// <summary>
@@ -331,7 +414,7 @@ namespace FTSDK.Unity.Bridge
         /// <param name="config"></param>
         public static void InitRUMConfig(RUMConfig config)
         {
-            _InovkeMethod(KEY_METHOD_INIT_RUM_CONFIG, JsonConvert.SerializeObject(config, NULL_HANDLER));
+            _InovkeMethod(KEY_METHOD_INIT_RUM_CONFIG, JsonConvert.SerializeObject(config, JSON_HANDLER));
         }
 
         /// <summary>
@@ -340,7 +423,7 @@ namespace FTSDK.Unity.Bridge
         /// <param name="config"></param>
         public static void InitLogConfig(LogConfig config)
         {
-            _InovkeMethod(KEY_METHOD_INIT_LOG_CONFIG, JsonConvert.SerializeObject(config, NULL_HANDLER));
+            _InovkeMethod(KEY_METHOD_INIT_LOG_CONFIG, JsonConvert.SerializeObject(config, JSON_HANDLER));
         }
 
         /// <summary>
@@ -349,7 +432,7 @@ namespace FTSDK.Unity.Bridge
         /// <param name="config"></param>
         public static void InitTraceConfig(TraceConfig config)
         {
-            _InovkeMethod(KEY_METHOD_INIT_TRACE_CONFIG, JsonConvert.SerializeObject(config, NULL_HANDLER));
+            _InovkeMethod(KEY_METHOD_INIT_TRACE_CONFIG, JsonConvert.SerializeObject(config, JSON_HANDLER));
         }
 
         /// <summary>
@@ -370,7 +453,7 @@ namespace FTSDK.Unity.Bridge
         /// <param name="userData"></param>
         public static async Task BindUserData(UserData userData)
         {
-            await _InovkeMethodAsync(KEY_METHOD_BIND_USER_DATA, JsonConvert.SerializeObject(userData, NULL_HANDLER));
+            await _InovkeMethodAsync(KEY_METHOD_BIND_USER_DATA, JsonConvert.SerializeObject(userData, JSON_HANDLER));
         }
 
         /// <summary>
@@ -395,7 +478,7 @@ namespace FTSDK.Unity.Bridge
                 actionName,
                 actionType,
                 duartion
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
         }
 
         /// <summary>
@@ -421,7 +504,7 @@ namespace FTSDK.Unity.Bridge
                 actionName,
                 actionType,
                 property
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
 
         }
 
@@ -436,7 +519,7 @@ namespace FTSDK.Unity.Bridge
             {
                 viewName,
                 loadTime,
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
         }
 
         /// <summary>
@@ -459,7 +542,7 @@ namespace FTSDK.Unity.Bridge
             {
                 viewName,
                 property
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
 
         }
 
@@ -480,7 +563,7 @@ namespace FTSDK.Unity.Bridge
             _InovkeMethod(KEY_METHOD_STOP_VIEW, JsonConvert.SerializeObject(new
             {
                 property,
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
         }
 
         /// <summary>
@@ -488,12 +571,10 @@ namespace FTSDK.Unity.Bridge
         /// </summary>
         /// <param name="log">日志</param>
         /// <param name="message">消息</param>
-        /// <param name="errorType">错误类型</param>
-        /// <param name="state">程序运行状态</param>
         /// <returns></returns>
-        public static async Task AddError(string log, string message, string errorType, string state)
+        public static async Task AddError(string log, string message)
         {
-            await AddError(log, message, errorType, state, null);
+            await AddError(log, message, null);
         }
 
         /// <summary>
@@ -501,13 +582,13 @@ namespace FTSDK.Unity.Bridge
         /// </summary>
         /// <param name="log">日志</param>
         /// <param name="message">消息</param>
-        /// <param name="errorType">错误类型</param>
-        /// <param name="state">程序运行状态</param>
         /// <param name="property">附加属性参数</param>
         /// <returns></returns>
-        public static async Task AddError(string log, string message, string errorType, string state,
+        public static async Task AddError(string log, string message,
             Dictionary<string, object> property)
         {
+            string errorType = "native_crash";
+            string state = "run";
             await _InovkeMethodAsync(KEY_METHOD_ADD_ERROR, JsonConvert.SerializeObject(new
             {
                 log,
@@ -515,7 +596,7 @@ namespace FTSDK.Unity.Bridge
                 errorType,
                 state,
                 property
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
         }
 
         /// <summary>
@@ -544,7 +625,7 @@ namespace FTSDK.Unity.Bridge
                 log,
                 duration,
                 property
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
 
         }
 
@@ -594,7 +675,7 @@ namespace FTSDK.Unity.Bridge
             {
                 resourceId,
                 property
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
         }
 
         /// <summary>
@@ -619,7 +700,7 @@ namespace FTSDK.Unity.Bridge
         /// <param name="log">日志内容</param>
         /// <param name="level">日志等级 info，warning，error，critical，ok</param>
         /// <returns></returns>
-        public static async Task AddLog(string log, string level)
+        public static async Task AddLog(string log, LogLevel level)
         {
             await AddLog(log, level, null);
         }
@@ -631,14 +712,14 @@ namespace FTSDK.Unity.Bridge
         /// <param name="level">日志等级 info，warning，error，critical，ok</param>
         /// <param name="property">附加属性参数</param>
         /// <returns></returns>
-        public static async Task AddLog(string log, string level, Dictionary<string, object> property)
+        public static async Task AddLog(string log, LogLevel level, Dictionary<string, object> property)
         {
             await _InovkeMethodAsync(KEY_METHOD_ADD_LOG, JsonConvert.SerializeObject(new
             {
                 log,
                 level,
                 property
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
         }
         /// <summary>
         /// 获取链路
@@ -653,7 +734,7 @@ namespace FTSDK.Unity.Bridge
             {
                 resourceId,
                 url,
-            }, NULL_HANDLER));
+            }, JSON_HANDLER));
         }
 
         /// <summary>
@@ -703,7 +784,7 @@ namespace FTSDK.Unity.Bridge
         private static string _InovkeMethod(string method, string json)
         {
 
-            // UnityEngine.Debug.Log(method);
+            //UnityEngine.Debug.Log(json);
 
 #if UNITY_IOS
         IntPtr ptr = invokeMethod(method,json);

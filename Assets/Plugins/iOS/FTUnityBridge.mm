@@ -137,45 +137,19 @@ void initRUMConfig(const char* rumConfigJson){
     NSNumber *enableTraceUserResource = [configDict objectForKey:@"enableNativeUserResource"];
     NSNumber *enableTraceUserAction = [configDict objectForKey:@"enableNativeUserAction"];
     NSNumber *enableNativeUserView = [configDict objectForKey:@"enableNativeUserView"];
-    NSArray *extraMonitorTypeWithError = [configDict objectForKey:@"extraMonitorTypeWithError"];
-    NSArray *deviceMonitorType = [configDict objectForKey:@"deviceMonitorType"];
+    NSNumber *extraMonitorTypeWithError = [configDict objectForKey:@"extraMonitorTypeWithError"];
+    NSNumber *deviceMonitorType = [configDict objectForKey:@"deviceMonitorType"];
     NSString *detectFrequency = [configDict objectForKey:@"detectFrequency"];
     NSDictionary *globalContext = [configDict objectForKey:@"globalContext"];
     FTRumConfig *rumConfig = [[FTRumConfig alloc]initWithAppid:rumAppId];
     if(sampleRate){
         rumConfig.samplerate = [sampleRate floatValue] * 100;
     }
-    if(extraMonitorTypeWithError&&extraMonitorTypeWithError.count>0){
-        FTErrorMonitorType errorMonitorType;
-        for (NSString *type in deviceMonitorType) {
-            if([type isEqualToString:@"memory"]){
-                errorMonitorType = errorMonitorType|FTErrorMonitorMemory;
-            }else if ([type isEqualToString:@"cpu"]){
-                errorMonitorType = errorMonitorType|FTErrorMonitorCpu;
-            }else if ([type isEqualToString:@"battery"]){
-                errorMonitorType = errorMonitorType|FTErrorMonitorBattery;
-            }else{
-                errorMonitorType = FTErrorMonitorAll;
-                break;
-            }
-        }
-        rumConfig.errorMonitorType = errorMonitorType;
+    if(extraMonitorTypeWithError){
+        rumConfig.errorMonitorType = (FTErrorMonitorType)[extraMonitorTypeWithError intValue];
     }
-    if(deviceMonitorType&&deviceMonitorType.count>0){
-        FTDeviceMetricsMonitorType monitorType;
-        for (NSString *type in deviceMonitorType) {
-            if([type isEqualToString:@"memory"]){
-                monitorType = monitorType|FTDeviceMetricsMonitorMemory;
-            }else if([type isEqualToString:@"cpu"]){
-                monitorType = monitorType|FTDeviceMetricsMonitorCpu;
-            }else if([type isEqualToString:@"fps"]){
-                monitorType = monitorType|FTDeviceMetricsMonitorFps;
-            }else if([type isEqualToString:@"all"]){
-                monitorType = FTDeviceMetricsMonitorAll;
-                break;
-            }
-        }
-        rumConfig.deviceMetricsMonitorType = monitorType;
+    if(deviceMonitorType){
+        rumConfig.deviceMetricsMonitorType = (FTDeviceMetricsMonitorType)[deviceMonitorType intValue];
     }
     if(detectFrequency){
         if ([detectFrequency isEqualToString:@"normal"]) {
