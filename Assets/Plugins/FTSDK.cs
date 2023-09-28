@@ -9,20 +9,20 @@ namespace FTSDK.Unity
 #pragma warning disable 4014
     public class FTSDK : MonoBehaviour
     {
-        private static FTSDK instance;
+        private static FTSDK _Instance;
 
-        public GameObject viewObserver;
-        public GameObject mainThreadDispatch;
+        public GameObject ViewObserver;
+        public GameObject MainThreadDispatch;
 
 
         void Awake()
         {
-            if (instance == null)
+            if (_Instance == null)
             {
-                instance = this;
+                _Instance = this;
                 StartCoroutine(_LoadPrefabs());
             }
-            else if (instance != this)
+            else if (_Instance != this)
             {
                 // 如果实例已经存在并且不是当前对象，则销毁当前对象
                 Destroy(gameObject);
@@ -68,7 +68,7 @@ namespace FTSDK.Unity
                 sampleRate = 0.9f,
                 enableCustomLog = true,
                 enableLinkRumData = true,
-                logLevelFilters = new List<LogLevel> { LogLevel.Info }
+                // logLevelFilters = new List<LogLevel> { LogLevel.Info }
                 // globalContext = new Dictionary<string, string>{
                 //     {"log_custom","log custom value"}
                 // }
@@ -85,9 +85,10 @@ namespace FTSDK.Unity
         }
         IEnumerator _LoadPrefabs()
         {
-            yield return Instantiate(mainThreadDispatch);
+            yield return Instantiate(MainThreadDispatch);
+            // 如果是 Native 工程已集成 SDK，可以跳过这个一步初始化，避免重复设置
             _InitSDK();
-            yield return Instantiate(viewObserver);
+            yield return Instantiate(ViewObserver);
 
         }
 
