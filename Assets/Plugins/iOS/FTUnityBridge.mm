@@ -50,15 +50,6 @@ NSDictionary* JsonStringToDict(const char* jsonString){
     return nil;
 }
 
-NSDictionary* StringToDict(NSString *string){
-    if (string && string.length>0){
-        NSData *jsonData = [string dataUsingEncoding:NSUTF8StringEncoding];
-        NSDictionary *dictionary = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableContainers error:nil];
-        return RemoveNull(dictionary);
-    }
-    return nil;
-}
-
 extern "C"{
 
 #pragma mark ========== SDK INIT/DeInit ==========
@@ -304,12 +295,14 @@ void addResource(const char* json){
     NSDictionary *netStatus = [configDict objectForKey:@"netStatus"];
     
     FTResourceContentModel *content = [[FTResourceContentModel alloc]init];
-    NSString *requestHeaderStr =  [params objectForKey:@"requestHeader"];
-    NSDictionary *requestHeader = StringToDict(requestHeaderStr);
-    content.requestHeader = requestHeader;
-    NSString *responseHeaderStr =  [params objectForKey:@"responseHeader"];
-    NSDictionary *responseHeader = StringToDict(responseHeaderStr);
-    content.responseHeader = responseHeader;
+    id requestHeader =  [params objectForKey:@"requestHeader"];
+    if([requestHeader isKindOfClass:NSDictionary.class]){
+        content.requestHeader = requestHeader;
+    }
+    id responseHeader =  [params objectForKey:@"responseHeader"];
+    if([responseHeader isKindOfClass:[NSDictionary class]]){
+        content.responseHeader = responseHeader;
+    }
     content.httpMethod = [params objectForKey:@"resourceMethod"];
     content.responseBody = [params objectForKey:@"responseBody"];
     content.url = [NSURL URLWithString:[params objectForKey:@"url"]];
