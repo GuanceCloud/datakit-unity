@@ -44,5 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd6709fa87f8544a5a2069603b86ee03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  viewObserver: {fileID: 2666666485270890640, guid: 10ca3430c8f11420195868a673e69df5, type: 3}
-  mainThreadDispatch: {fileID: 1475346136358197019, guid: 909f89b6dcc2c414ebc8e0500c729f50, type: 3}
+  ViewObserver: {fileID: 2666666485270890640, guid: 10ca3430c8f11420195868a673e69df5, type: 3}
+  MainThreadDispatch: {fileID: 1475346136358197019, guid: 909f89b6dcc2c414ebc8e0500c729f50, type: 3}
