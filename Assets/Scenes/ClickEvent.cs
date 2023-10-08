@@ -20,11 +20,13 @@ public class ClickEvent : MonoBehaviour
         FTUnityBridge.StartAction("click", "test", new Dictionary<string, object>(){
             {"action_property","property test"}
         });
+        //  SceneManager.UnloadSceneAsync(0);
     }
 
     public void GoToMainScene()
     {
         SceneManager.LoadScene(0);
+        // SceneManager.UnloadSceneAsync(1);
     }
 
     public void AddError()

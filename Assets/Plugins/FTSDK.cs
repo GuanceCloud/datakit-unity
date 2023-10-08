@@ -26,8 +26,9 @@ namespace FTSDK.Unity
             {
                 // 如果实例已经存在并且不是当前对象，则销毁当前对象
                 Destroy(gameObject);
+                Instantiate(ViewObserver);
             }
-
+            
             // 在此之后，当前对象就是唯一的实例
             DontDestroyOnLoad(gameObject);
         }
@@ -89,7 +90,6 @@ namespace FTSDK.Unity
             // 如果是 Native 工程已集成 SDK，可以跳过这个一步初始化，避免重复设置
             _InitSDK();
             yield return Instantiate(ViewObserver);
-
         }
 
 
