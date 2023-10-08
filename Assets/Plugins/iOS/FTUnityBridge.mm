@@ -56,7 +56,7 @@ extern "C"{
 /// SDK 初始化配置
 /// - Parameter json: 配置项
 /// serverUrl：datakit 安装地址 URL 地址
-/// envType：数据上传环境，默认 prod
+/// env：数据上传环境，默认 prod
 /// serviceName：应用服务名，默认 android df_rum_android, iOS df_rum_ios
 /// debug: 是否开启 Debug 模式
 /// globalContext: 自定义全局参数
@@ -66,7 +66,7 @@ void install(const char* json){
         return;
     }
     NSString *serverUrl = [configDict objectForKey:@"serverUrl"];
-    NSString *envType = [configDict objectForKey:@"envType"];
+    NSString *envType = [configDict objectForKey:@"env"];
     NSString *serviceName = [configDict objectForKey:@"serviceName"];
     NSNumber *debug = [configDict objectForKey:@"debug"];
     NSDictionary *globalContext = [configDict objectForKey:@"globalContext"];

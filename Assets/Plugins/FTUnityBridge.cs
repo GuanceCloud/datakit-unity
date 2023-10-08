@@ -33,7 +33,7 @@ namespace FTSDK.Unity.Bridge
         /// <summary>
         /// 数据上传环境，默认 prod。prod：线上环境；gray：灰度环境；pre：预发布环境；common：日常环境；local：本地环境，支持自定义
         /// </summary>
-        public string envType { get; set; }
+        public string env { get; set; }
         public Dictionary<string, string> globalContext { get; set; }
         /// <summary>
         /// 应用服务名 android df_rum_android, iOS df_rum_ios

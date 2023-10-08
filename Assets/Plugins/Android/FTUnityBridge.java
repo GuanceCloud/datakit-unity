@@ -123,7 +123,7 @@ public class FTUnityBridge {
         if (serverUrl != null) {
             FTSDKConfig config = FTSDKConfig.builder(serverUrl);
             config.setDebug(data.optBoolean("debug", false));
-            String env = data.optString("envType", null);
+            String env = data.optString("env", null);
             if (env != null) {
                 config.setEnv(env);
             }

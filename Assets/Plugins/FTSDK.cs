@@ -41,7 +41,7 @@ namespace FTSDK.Unity
             FTUnityBridge.Install(new SDKConfig
             {
                 serverUrl = "http://10.0.0.1:9529",
-                envType = "prod",
+                env = "prod",
                 debug = true,
                 // serviceName = "Your Services",
                 // globalContext = new Dictionary<string, string>{
