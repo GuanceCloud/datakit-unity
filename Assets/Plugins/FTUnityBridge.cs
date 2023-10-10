@@ -345,7 +345,7 @@ namespace FTSDK.Unity.Bridge
     /// </summary>
     public class FTUnityBridge
     {
-        private const string SDK_VERSION = "1.0.0-alpha.1";
+        private const string SDK_VERSION = "1.0.0-alpha.2";
         private const string KEY_UNITY_SDK_VERSION = "sdk_package_unity";
 
         private const string KEY_METHOD_INSTALL = "Install";
