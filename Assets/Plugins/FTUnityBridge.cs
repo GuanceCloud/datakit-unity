@@ -1,7 +1,5 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -374,6 +372,8 @@ namespace FTSDK.Unity.Bridge
             Converters = { new BridgeEnumConverter() }
         };
 
+#if (UNITY_IOS && !UNITY_EDITOR)
+
         /// <summary>
         ///  iOS 桥接调用方法
         /// </summary>
@@ -382,12 +382,20 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         [DllImport("__Internal")]
         private static extern IntPtr invokeMethod(string method, string json);
+
+#endif
+
+#if (UNITY_ANDROID && !UNITY_EDITOR)
+         
         /// <summary>
-        /// Android 桥接方法调用勒
+        /// Android 桥接方法调用类
         /// </summary>
+        /// 
         private const string ANDROID_PLUGIN_CLASS_NAME = "com.ft.sdk.unity.bridge.FTUnityBridge";
 
         private static AndroidJavaObject androidPlugin;
+
+#endif
 
         /// <summary>
         /// 初始化SDK本地配置数据
@@ -781,13 +789,13 @@ namespace FTSDK.Unity.Bridge
 
             //UnityEngine.Debug.Log(json);
 
-#if UNITY_IOS
+#if (UNITY_IOS && !UNITY_EDITOR)
         IntPtr ptr = invokeMethod(method,json);
         return Marshal.PtrToStringAnsi(ptr);
 #endif
 
             // 在Android上调用Android插件的方法
-#if UNITY_ANDROID
+#if (UNITY_ANDROID && !UNITY_EDITOR)
 
             if (androidPlugin == null)
             {
