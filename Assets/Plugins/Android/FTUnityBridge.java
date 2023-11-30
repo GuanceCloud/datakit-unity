@@ -447,7 +447,7 @@ public class FTUnityBridge {
     }
 
     private static void addLog(JSONObject data) {
-        String content = data.optString("content", null);
+        String content = data.optString("log", null);
         String status = data.optString("level", null);
         JSONObject property = data.optJSONObject("property");
         if (content != null && status != null) {
