@@ -19,16 +19,15 @@ namespace FTSDK.Unity
             {
                 _Instance = this;
                 StartCoroutine(_LoadPrefabs());
+                // 在此之后，当前对象就是唯一的实例
+                DontDestroyOnLoad(gameObject);
             }
             else if (_Instance != this)
             {
                 // 如果实例已经存在并且不是当前对象，则销毁当前对象
                 Destroy(gameObject);
-                Instantiate(ViewObserver);
+                // Instantiate(ViewObserver);
             }
-            
-            // 在此之后，当前对象就是唯一的实例
-            DontDestroyOnLoad(gameObject);
         }
 
 

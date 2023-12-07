@@ -177,15 +177,15 @@ void startAction(const char* json){
 /// 创建页面
 /// - Parameter json: 参数
 /// viewName：页面名称
-/// duration: 加载时间，纳秒
+/// loadTime: 加载时间，纳秒
 void createView(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
         return;
     }
     NSString *viewName = [configDict objectForKey:@"viewName"];
-    NSNumber *duration = [configDict objectForKey:@"duration"];
-    [FTExternalDataManager.sharedManager onCreateView:viewName loadTime:duration];
+    NSNumber *loadTime = [configDict objectForKey:@"loadTime"];
+    [FTExternalDataManager.sharedManager onCreateView:viewName loadTime:loadTime];
 }
 
 /// 进入页面

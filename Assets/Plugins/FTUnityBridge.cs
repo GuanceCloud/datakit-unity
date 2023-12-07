@@ -223,7 +223,7 @@ namespace FTSDK.Unity.Bridge
     public class NetStatus
     {
         /// <summary>
-        /// 请求开始时间
+        /// 请求任务开始时间
         /// </summary>
         public long fetchStartTime { get; set; } = -1L;
         /// <summary>
@@ -258,6 +258,11 @@ namespace FTSDK.Unity.Bridge
         /// ssl 结束时间
         /// </summary>
         public long sslEndTime { get; set; } = -1L;
+
+        /// <summary>
+        /// 请求开始时间，tcp，ssl end 之后
+        /// </summary>
+        public long requestStartTime { get; set; } = -1L;
 
     }
 
