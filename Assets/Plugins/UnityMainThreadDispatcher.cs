@@ -30,7 +30,7 @@ namespace FTSDK.Unity
     public class UnityMainThreadDispatcher : MonoBehaviour
     {
 
-        private static readonly Queue<Action> _executionQueue = new Queue<Action>();
+        private readonly Queue<Action> _executionQueue = new Queue<Action>();
 
         public void Update()
         {
