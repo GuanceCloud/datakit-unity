@@ -22,7 +22,6 @@ import com.ft.sdk.garble.bean.ResourceParams;
 import com.ft.sdk.garble.bean.Status;
 import com.ft.sdk.garble.bean.UserData;
 import com.ft.sdk.garble.utils.LogUtils;
-import com.ft.sdk.garble.utils.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -67,47 +66,47 @@ public class FTUnityBridge {
         JSONObject data = null;
         try {
             data = new JSONObject(json);
+            if (METHOD_INSTALL.equals(method)) {
+                install(data);
+            } else if (METHOD_DE_INIT.equals(method)) {
+                deInit(data);
+            } else if (METHOD_BIND_USER_DATA.equals(method)) {
+                bindUserData(data);
+            } else if (METHOD_UN_BIND_USERDATA.equals(method)) {
+                unBindUserdata(data);
+            } else if (METHOD_INIT_RUM_CONFIG.equals(method)) {
+                initRUMConfig(data);
+            } else if (METHOD_CREATE_VIEW.equals(method)) {
+                createView(data);
+            } else if (METHOD_START_VIEW.equals(method)) {
+                startView(data);
+            } else if (METHOD_STOP_VIEW.equals(method)) {
+                stopView(data);
+            } else if (METHOD_START_ACTION.equals(method)) {
+                startAction(data);
+            } else if (METHOD_ADD_ACTION.equals(method)) {
+                addAction(data);
+            } else if (METHOD_START_RESOURCE.equals(method)) {
+                startResource(data);
+            } else if (METHOD_STOP_RESOURCE.equals(method)) {
+                stopResource(data);
+            } else if (METHOD_ADD_RESOURCE.equals(method)) {
+                addResource(data);
+            } else if (METHOD_ADD_ERROR.equals(method)) {
+                addError(data);
+            } else if (METHOD_ADD_LONG_TASK.equals(method)) {
+                addLongTask(data);
+            } else if (METHOD_INIT_LOG_CONFIG.equals(method)) {
+                initLogConfig(data);
+            } else if (METHOD_ADD_LOG.equals(method)) {
+                addLog(data);
+            } else if (METHOD_INIT_TRACE_CONFIG.equals(method)) {
+                initTraceConfig(data);
+            } else if (METHOD_INIT_GET_TRACE_HEADER.equals(method)) {
+                return getTraceHeader(data);
+            }
         } catch (JSONException e) {
             LogUtils.e(TAG, Log.getStackTraceString(e));
-        }
-        if (METHOD_INSTALL.equals(method)) {
-            install(data);
-        } else if (METHOD_DE_INIT.equals(method)) {
-            deInit(data);
-        } else if (METHOD_BIND_USER_DATA.equals(method)) {
-            bindUserData(data);
-        } else if (METHOD_UN_BIND_USERDATA.equals(method)) {
-            unBindUserdata(data);
-        } else if (METHOD_INIT_RUM_CONFIG.equals(method)) {
-            initRUMConfig(data);
-        } else if (METHOD_CREATE_VIEW.equals(method)) {
-            createView(data);
-        } else if (METHOD_START_VIEW.equals(method)) {
-            startView(data);
-        } else if (METHOD_STOP_VIEW.equals(method)) {
-            stopView(data);
-        } else if (METHOD_START_ACTION.equals(method)) {
-            startAction(data);
-        } else if (METHOD_ADD_ACTION.equals(method)) {
-            addAction(data);
-        } else if (METHOD_START_RESOURCE.equals(method)) {
-            startResource(data);
-        } else if (METHOD_STOP_RESOURCE.equals(method)) {
-            stopResource(data);
-        } else if (METHOD_ADD_RESOURCE.equals(method)) {
-            addResource(data);
-        } else if (METHOD_ADD_ERROR.equals(method)) {
-            addError(data);
-        } else if (METHOD_ADD_LONG_TASK.equals(method)) {
-            addLongTask(data);
-        } else if (METHOD_INIT_LOG_CONFIG.equals(method)) {
-            initLogConfig(data);
-        } else if (METHOD_ADD_LOG.equals(method)) {
-            addLog(data);
-        } else if (METHOD_INIT_TRACE_CONFIG.equals(method)) {
-            initTraceConfig(data);
-        } else if (METHOD_INIT_GET_TRACE_HEADER.equals(method)) {
-            return getTraceHeader(data);
         }
 
         return null;
@@ -119,9 +118,14 @@ public class FTUnityBridge {
      * @param data
      */
     private static void install(JSONObject data) {
-        String serverUrl = data.optString("serverUrl", null);
-        if (serverUrl != null) {
-            FTSDKConfig config = FTSDKConfig.builder(serverUrl);
+        String datakitUrl = data.optString("datakitUrl", null);
+        if (datakitUrl == null || datakitUrl.isEmpty()) {
+            datakitUrl = data.optString("serverUrl", null);
+        }
+        String datawayUrl = data.optString("datawayUrl", null);
+        String cliToken = data.optString("cliToken", null);
+        if (datakitUrl != null || (datawayUrl != null && cliToken != null)) {
+            FTSDKConfig config = datakitUrl != null ? FTSDKConfig.builder(datakitUrl) : FTSDKConfig.builder(datawayUrl, cliToken);
             config.setDebug(data.optBoolean("debug", false));
             String env = data.optString("env", null);
             if (env != null) {
@@ -357,6 +361,8 @@ public class FTUnityBridge {
             netStatusBean.responseEndTime = netStatus.optLong("responseEndTime");
             netStatusBean.sslStartTime = netStatus.optLong("sslStartTime");
             netStatusBean.sslEndTime = netStatus.optLong("sslEndTime");
+            netStatusBean.tcpStartTime = netStatus.optLong("tcpStartTime");
+            netStatusBean.tcpEndTime = netStatus.optLong("tcpEndTime");
         }
 
         FTRUMGlobalManager.get().addResource(key, params, netStatusBean);

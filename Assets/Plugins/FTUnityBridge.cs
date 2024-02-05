@@ -18,9 +18,28 @@ namespace FTSDK.Unity.Bridge
     public class SDKConfig
     {
         /// <summary>
-        /// datakit 安装地址 URL 地址，例子：http://10.0.0.1:9529，端口默认 9529。注意：安装 SDK 设备需能访问这地址
+        /// datakit 访问地址 URL 地址，例子：http://10.0.0.1:9529，端口默认 9529。注意：安装 SDK 设备需能访问这地址
         /// </summary>
+        /// 
+        [Obsolete("This params is deprecated. Replace with 'datakitUrl' instead")]
         public string serverUrl { get; set; }
+
+        /// <summary>
+        /// datakit 访问地址 URL 地址，例子：http://10.0.0.1:9529，端口默认 9529。注意：安装 SDK 设备需能访问这地址
+        /// </summary>
+        public string datakitUrl { get; set; }
+
+        /// <summary>
+        /// dataway 访问 URL 地址，例子：http://10.0.0.1:9528，端口默认 9528，注意：安装 SDK 设备需能访问这地址.注意：datakit 和 dataway 配置两者二选一
+        /// </summary>
+        public string datawayUrl { get; set; }
+
+        /// <summary>
+        /// 认证 token，需要与 datawayUrl 同时配置
+        /// </summary>
+        public string cliToken { get; set; }
+
+
         /// <summary>
         /// 是否开启 Debug 模式
         /// </summary>

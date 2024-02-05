@@ -65,13 +65,21 @@ void install(const char* json){
     if(configDict == nil){
         return;
     }
-    NSString *serverUrl = [configDict objectForKey:@"serverUrl"];
+    NSString *datakitUrl = [configDict objectForKey:@"datakitUrl"];
+    NSString *dataWayUrl = [configDict objectForKey:@"datawayUrl"];
+    NSString *cliToken = [configDict objectForKey:@"cliToken"];
     NSString *envType = [configDict objectForKey:@"env"];
     NSString *serviceName = [configDict objectForKey:@"serviceName"];
     NSNumber *debug = [configDict objectForKey:@"debug"];
     NSDictionary *globalContext = [configDict objectForKey:@"globalContext"];
     
-    FTMobileConfig *config = [[FTMobileConfig alloc]initWithMetricsUrl:serverUrl];
+    FTMobileConfig *config;
+    if(dataWayUrl && dataWayUrl.length>0 && clientToken && clientToken.length>0){
+        config = [[FTMobileConfig alloc]initWithDatawayUrl:dataWayUrl clientToken:clientToken];
+    }else(datakitUrl && datakitUrl.length>0){
+        config = [[FTMobileConfig alloc]initWithDatakitUrl:datakitUrl];
+    }
+    
     config.env = envType;
     config.service = serviceName;
     config.enableSDKDebugLog = [debug boolValue];
