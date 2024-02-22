@@ -16,7 +16,6 @@ import com.ft.sdk.FTTraceManager;
 import com.ft.sdk.LogCacheDiscard;
 import com.ft.sdk.TraceType;
 import com.ft.sdk.garble.bean.AppState;
-import com.ft.sdk.garble.bean.ErrorType;
 import com.ft.sdk.garble.bean.NetStatusBean;
 import com.ft.sdk.garble.bean.ResourceParams;
 import com.ft.sdk.garble.bean.Status;
@@ -381,7 +380,7 @@ public class FTUnityBridge {
         JSONObject property = data.optJSONObject("property");
         HashMap<String, Object> params = convertJSONtoHashMap(property);
         FTRUMGlobalManager.get().addError(message, stack,
-                ErrorType.getValueFrom(errorType), AppState.getValueFrom(state), params);
+                errorType, AppState.getValueFrom(state), params);
     }
 
     /**

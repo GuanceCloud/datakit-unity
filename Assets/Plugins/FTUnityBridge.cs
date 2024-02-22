@@ -601,9 +601,34 @@ namespace FTSDK.Unity.Bridge
         /// <param name="log">日志</param>
         /// <param name="message">消息</param>
         /// <returns></returns>
+        public static async Task AddError(string log, string message, Dictionary<string, object> property)
+        {
+            await AddError(log, message, "native_crash", property);
+        }
+
+
+        /// <summary>
+        /// 添加错误信息
+        /// </summary>
+        /// <param name="log">日志</param>
+        /// <param name="message">消息</param>
+        /// <returns></returns>
         public static async Task AddError(string log, string message)
         {
-            await AddError(log, message, null);
+            await AddError(log, message, "native_crash", null);
+        }
+
+
+        /// <summary>
+        /// 添加错误信息
+        /// </summary>
+        /// <param name="log">日志</param>
+        /// <param name="errorType">错误类型</param>
+        /// <param name="message">消息</param>
+        /// <returns></returns>
+        public static async Task AddError(string log, string message, string errorType)
+        {
+            await AddError(log, message, errorType, null);
         }
 
         /// <summary>
@@ -611,12 +636,12 @@ namespace FTSDK.Unity.Bridge
         /// </summary>
         /// <param name="log">日志</param>
         /// <param name="message">消息</param>
+        /// <param name="errorType">错误类型</param>
         /// <param name="property">附加属性参数</param>
         /// <returns></returns>
-        public static async Task AddError(string log, string message,
+        public static async Task AddError(string log, string message, string errorType,
             Dictionary<string, object> property)
         {
-            string errorType = "native_crash";
             string state = "run";
             await _InovkeMethodAsync(KEY_METHOD_ADD_ERROR, JsonConvert.SerializeObject(new
             {
