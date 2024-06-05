@@ -398,6 +398,65 @@ namespace FTSDK.Unity.Bridge
             Converters = { new BridgeEnumConverter() }
         };
 
+        /// IL2CPP Newtonsoft 兼容
+        class BaseBridgeData
+        {
+            public Dictionary<string, object> property;
+        }
+
+        /// IL2CPP Newtonsoft 兼容，View 数据 json 序列化
+        class ViewBridgeData : BaseBridgeData
+        {
+            public string viewName;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public long loadTime;
+        }
+
+        /// IL2CPP Newtonsoft 兼容，Action 数据 json 序列化
+        class ActionBridgeData : BaseBridgeData
+        {
+            public string actionName;
+            public string actionType;
+
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public long duration;
+
+        }
+
+        /// IL2CPP Newtonsoft 兼容，Longtask 数据 json 序列化
+        class LongTaskBridgeData : BaseBridgeData
+        {
+            public string log;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public long duration;
+
+        }
+
+        /// IL2CPP Newtonsoft 兼容 ，Error 数据 json 序列化
+        class ErrorBridgeData : BaseBridgeData
+        {
+            public string log;
+            public string message;
+            public string errorType;
+            public string state;
+        }
+
+        /// IL2CPP Newtonsoft 兼容，Resource  数据 json 序列化
+        class ResourceBridgeData : BaseBridgeData
+        {
+            public string resourceId;
+            public ResourceParams resourceParams;
+            public NetStatus netStatus;
+            public string url;
+        }
+
+        /// IL2CPP Newtonsoft 兼容，Log 数据 json 序列化
+        class LogBridgeData : BaseBridgeData
+        {
+            public string log;
+            public LogLevel level;
+        }
+
 #if (UNITY_IOS && !UNITY_EDITOR)
 
         /// <summary>
@@ -502,11 +561,11 @@ namespace FTSDK.Unity.Bridge
         public static void AddAction(string actionName, string actionType, long duartion)
         {
 
-            _InovkeMethod(KEY_METHOD_ADD_ACTION, JsonConvert.SerializeObject(new
+            _InovkeMethod(KEY_METHOD_ADD_ACTION, JsonConvert.SerializeObject(new ActionBridgeData
             {
-                actionName,
-                actionType,
-                duartion
+                actionName = actionName,
+                actionType = actionType,
+                duration = duartion
             }, JSON_HANDLER));
         }
 
@@ -528,11 +587,11 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">附加属性参数</param>
         public static void StartAction(string actionName, string actionType, Dictionary<string, object> property)
         {
-            _InovkeMethod(KEY_METHOD_START_ACTION, JsonConvert.SerializeObject(new
+            _InovkeMethod(KEY_METHOD_START_ACTION, JsonConvert.SerializeObject(new ActionBridgeData
             {
-                actionName,
-                actionType,
-                property
+                actionName = actionName,
+                actionType = actionType,
+                property = property
             }, JSON_HANDLER));
 
         }
@@ -544,10 +603,10 @@ namespace FTSDK.Unity.Bridge
         /// <param name="loadTime">加载时间，纳秒</param>
         public static void CreateView(string viewName, long loadTime)
         {
-            _InovkeMethod(KEY_METHOD_CREATE_VIEW, JsonConvert.SerializeObject(new
+            _InovkeMethod(KEY_METHOD_CREATE_VIEW, JsonConvert.SerializeObject(new ViewBridgeData
             {
-                viewName,
-                loadTime,
+                viewName = viewName,
+                loadTime = loadTime,
             }, JSON_HANDLER));
         }
 
@@ -567,12 +626,11 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">附加属性参数</param>
         public static void StartView(string viewName, Dictionary<string, object> property)
         {
-            _InovkeMethod(KEY_METHOD_START_VIEW, JsonConvert.SerializeObject(new
+            _InovkeMethod(KEY_METHOD_START_VIEW, JsonConvert.SerializeObject(new ViewBridgeData()
             {
-                viewName,
-                property
+                viewName = viewName,
+                property = property
             }, JSON_HANDLER));
-
         }
 
         /// <summary>
@@ -589,9 +647,9 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">附加属性参数</param>
         public static void StopView(Dictionary<string, object> property)
         {
-            _InovkeMethod(KEY_METHOD_STOP_VIEW, JsonConvert.SerializeObject(new
+            _InovkeMethod(KEY_METHOD_STOP_VIEW, JsonConvert.SerializeObject(new ViewBridgeData
             {
-                property,
+                property = property,
             }, JSON_HANDLER));
         }
 
@@ -643,13 +701,13 @@ namespace FTSDK.Unity.Bridge
             Dictionary<string, object> property)
         {
             string state = "run";
-            await _InovkeMethodAsync(KEY_METHOD_ADD_ERROR, JsonConvert.SerializeObject(new
+            await _InovkeMethodAsync(KEY_METHOD_ADD_ERROR, JsonConvert.SerializeObject(new ErrorBridgeData
             {
-                log,
-                message,
-                errorType,
-                state,
-                property
+                log = log,
+                message = message,
+                errorType = errorType,
+                state = state,
+                property = property
             }, JSON_HANDLER));
         }
 
@@ -674,11 +732,11 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task AddLongTask(string log, long duration, Dictionary<string, object> property)
         {
-            await _InovkeMethodAsync(KEY_METHOD_ADD_LONG_TASK, JsonConvert.SerializeObject(new
+            await _InovkeMethodAsync(KEY_METHOD_ADD_LONG_TASK, JsonConvert.SerializeObject(new LongTaskBridgeData
             {
-                log,
-                duration,
-                property
+                log = log,
+                duration = duration,
+                property = property
             }, JSON_HANDLER));
 
         }
@@ -701,11 +759,11 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task StartResource(string resourceId, Dictionary<string, object> property)
         {
-            await _InovkeMethodAsync(KEY_METHOD_START_RESOURCE, JsonConvert.SerializeObject(new
+            await _InovkeMethodAsync(KEY_METHOD_START_RESOURCE, JsonConvert.SerializeObject(new ResourceBridgeData
             {
-                resourceId,
-                property
-            }));
+                resourceId = resourceId,
+                property = property
+            },JSON_HANDLER));
         }
 
         /// <summary>
@@ -725,10 +783,10 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">附加属性参数</param>
         public static async Task StopResource(string resourceId, Dictionary<string, object> property)
         {
-            await _InovkeMethodAsync(KEY_METHOD_STOP_RESOURCE, JsonConvert.SerializeObject(new
+            await _InovkeMethodAsync(KEY_METHOD_STOP_RESOURCE, JsonConvert.SerializeObject(new ResourceBridgeData
             {
-                resourceId,
-                property
+                resourceId = resourceId,
+                property = property
             }, JSON_HANDLER));
         }
 
@@ -740,12 +798,12 @@ namespace FTSDK.Unity.Bridge
         /// <param name="netStatus">网络指标数据</param>
         public static async Task AddResource(string resourceId, ResourceParams resourceParams, NetStatus netStatus)
         {
-            await _InovkeMethodAsync(KEY_METHOD_ADD_RESOURCE, JsonConvert.SerializeObject(new
+            await _InovkeMethodAsync(KEY_METHOD_ADD_RESOURCE, JsonConvert.SerializeObject(new ResourceBridgeData
             {
-                resourceId,
-                resourceParams,
-                netStatus
-            }));
+                resourceId = resourceId,
+                resourceParams = resourceParams,
+                netStatus = netStatus
+            },JSON_HANDLER));
 
         }
         /// <summary>
@@ -768,11 +826,11 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task AddLog(string log, LogLevel level, Dictionary<string, object> property)
         {
-            await _InovkeMethodAsync(KEY_METHOD_ADD_LOG, JsonConvert.SerializeObject(new
+            await _InovkeMethodAsync(KEY_METHOD_ADD_LOG, JsonConvert.SerializeObject(new LogBridgeData
             {
-                log,
-                level,
-                property
+                log = log,
+                level = level,
+                property = property
             }, JSON_HANDLER));
         }
         /// <summary>
@@ -784,10 +842,10 @@ namespace FTSDK.Unity.Bridge
 
         public static async Task<string> GetTraceHeader(string resourceId, string url)
         {
-            return await _InovkeMethodAsync(KEY_METHOD_GET_TRACE_HEADER, JsonConvert.SerializeObject(new
+            return await _InovkeMethodAsync(KEY_METHOD_GET_TRACE_HEADER, JsonConvert.SerializeObject(new ResourceBridgeData
             {
-                resourceId,
-                url,
+                resourceId = resourceId,
+                url = url,
             }, JSON_HANDLER));
         }
 
