@@ -1,5 +1,5 @@
 # 观测云 SDK Unity
-![](https://img.shields.io/badge/dynamic/json?label=unity&color=orange&query=$.version&uri=https://static.guance.com/ft-sdk-package/badge/unity/version.json&link=https://github.com/GuanceCloud/datakit-react-native) ![](https://img.shields.io/badge/dynamic/json?label=platform&color=lightgrey&query=$.platform&uri=https://static.guance.com/ft-sdk-package/badge/react-native/info.json&link=https://github.com/GuanceCloud/datakit-unity)
+![](https://img.shields.io/badge/dynamic/json?label=unity&color=orange&query=$.version&uri=https://static.guance.com/ft-sdk-package/badge/unity/version.json&link=https://github.com/GuanceCloud/datakit-unity) ![](https://img.shields.io/badge/dynamic/json?label=platform&color=lightgrey&query=$.platform&uri=https://static.guance.com/ft-sdk-package/badge/unity/info.json&link=https://github.com/GuanceCloud/datakit-unity)
 
 ## 简介
 
