@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 #import <FTMobileSDK/FTMobileAgent.h>
 #import <FTMobileSDK/FTMobileConfig+Private.h>
+#import <FTMobileSDK/FTConstants.h>
 
 /// c 字符串 转换 oc 字符串
 /// - Parameter string: c 字符串
