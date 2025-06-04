@@ -323,54 +323,50 @@ namespace FTSDK.Unity.Bridge
 
     }
 
-    /// <summary>
-    /// Resource 网络耗时指标
-    /// </summary>
-    public class NetStatus
-    {
-        /// <summary>
-        /// 请求任务开始时间
-        /// </summary>
-        public long fetchStartTime { get; set; } = -1L;
-        /// <summary>
-        /// tcp 连接时间
-        /// </summary>
-        public long tcpStartTime { get; set; } = -1L;
-        /// <summary>
-        /// tcp 结束时间
-        /// </summary>
-        public long tcpEndTime { get; set; } = -1L;
-        /// <summary>
-        /// dns 开始时间
-        /// </summary>
-        public long dnsStartTime { get; set; } = -1L;
-        /// <summary>
-        /// dns 结束时间
-        /// </summary>
-        public long dnsEndTime { get; set; } = -1L;
-        /// <summary>
-        /// 响应开始时间
-        /// </summary>
-        public long responseStartTime { get; set; } = -1L;
-        /// <summary>
-        /// 响应结束时间
-        /// </summary>
-        public long responseEndTime { get; set; } = -1L;
-        /// <summary>
-        /// ssl 开始时间
-        /// </summary>
-        public long sslStartTime { get; set; } = -1L;
-        /// <summary>
-        /// ssl 结束时间
-        /// </summary>
-        public long sslEndTime { get; set; } = -1L;
+    // /// <summary>
+    // /// Resource 网络耗时指标
+    // /// </summary>
+    // public class NetStatus
+    // {
 
-        /// <summary>
-        /// 请求开始时间，tcp，ssl end 之后
-        /// </summary>
-        public long requestStartTime { get; set; } = -1L;
+    //     /// <summary>
+    //     /// 请求任务开始时间
+    //     /// </summary>
+    //     public long callStartTime { get; set; } = -1L;
+    //     /// <summary>
+    //     /// tcp 连接时间
+    //     /// </summary>
+    //     public long tcpStartTime { get; set; } = -1L;
+    //     /// <summary>
+    //     /// tcp 结束时间
+    //     /// </summary>
+    //     public long tcpEndTime { get; set; } = -1L;
+    //     /// <summary>
+    //     /// dns 开始时间
+    //     /// </summary>
+    //     public long dnsStartTime { get; set; } = -1L;
+    //     /// <summary>
+    //     /// dns 结束时间
+    //     /// </summary>
+    //     public long dnsEndTime { get; set; } = -1L;
+    //     /// <summary>
+    //     /// 响应开始时间
+    //     /// </summary>
+    //     public long bodyStartTime { get; set; } = -1L;
+    //     /// <summary>
+    //     /// 响应结束时间
+    //     /// </summary>
+    //     public long bodyEndTime { get; set; } = -1L;
+    //     /// <summary>
+    //     /// ssl 开始时间
+    //     /// </summary>
+    //     public long sslStartTime { get; set; } = -1L;
+    //     /// <summary>
+    //     /// ssl 结束时间
+    //     /// </summary>
+    //     public long sslEndTime { get; set; } = -1L;
 
-    }
+    // }
 
     /// <summary>
     /// 错误附加数据
@@ -884,13 +880,13 @@ namespace FTSDK.Unity.Bridge
         /// <param name="resourceId">资源 Id</param>
         /// <param name="resourceParams">数据传输内容</param>
         /// <param name="netStatus">网络指标数据</param>
-        public static async Task AddResource(string resourceId, ResourceParams resourceParams, NetStatus netStatus)
+        public static async Task AddResource(string resourceId, ResourceParams resourceParams)
         {
             await _InovkeMethodAsync(KEY_METHOD_ADD_RESOURCE, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
                 {"resourceId" , resourceId},
                 {"resourceParams" , resourceParams},
-                {"netStatus" , netStatus},
+                // {"netStatus" , netStatus},
             }.WithoutNullValues(), JSON_HANDLER));
 
         }

@@ -543,19 +543,21 @@ public class FTUnityBridge {
             params.responseContentType = resourceParams.optString("responseContentType");
         }
 
-        JSONObject netStatus = data.optJSONObject("netStatus");
+//        JSONObject netStatus = data.optJSONObject("netStatus");
         NetStatusBean netStatusBean = new NetStatusBean();
-        if (netStatus != null) {
-            netStatusBean.fetchStartTime = netStatus.optLong("fetchStartTime");
-            netStatusBean.dnsStartTime = netStatus.optLong("dnsStartTime");
-            netStatusBean.dnsEndTime = netStatus.optLong("dnsEndTime");
-            netStatusBean.responseStartTime = netStatus.optLong("responseStartTime");
-            netStatusBean.responseEndTime = netStatus.optLong("responseEndTime");
-            netStatusBean.sslStartTime = netStatus.optLong("sslStartTime");
-            netStatusBean.sslEndTime = netStatus.optLong("sslEndTime");
-            netStatusBean.tcpStartTime = netStatus.optLong("tcpStartTime");
-            netStatusBean.tcpEndTime = netStatus.optLong("tcpEndTime");
-        }
+//        if (netStatus != null) {
+//            netStatusBean.callStartTime = netStatus.optLong("callStartTime");
+//            netStatusBean.dnsStartTime = netStatus.optLong("dnsStartTime");
+//            netStatusBean.dnsEndTime = netStatus.optLong("dnsEndTime");
+//            netStatusBean.headerStartTime = netStatus.optLong("headerStartTime");
+//            netStatusBean.headerEndTime = netStatus.optLong("headerEndTime");
+//            netStatusBean.bodyStartTime = netStatus.optLong("bodyStartTime");
+//            netStatusBean.bodyEndTime = netStatus.optLong("bodyEndTime");
+//            netStatusBean.sslStartTime = netStatus.optLong("sslStartTime");
+//            netStatusBean.sslEndTime = netStatus.optLong("sslEndTime");
+//            netStatusBean.tcpStartTime = netStatus.optLong("tcpStartTime");
+//            netStatusBean.tcpEndTime = netStatus.optLong("tcpEndTime");
+//        }
 
         FTRUMGlobalManager.get().addResource(key, params, netStatusBean);
     }

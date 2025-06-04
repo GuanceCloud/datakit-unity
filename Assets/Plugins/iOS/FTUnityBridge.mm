@@ -130,8 +130,9 @@ void install(const char* json){
     }
     config.globalContext = globalContext;
 
-    NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
+  
     if ([params.allKeys containsObject:@"dataModifier"]) {
+        NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
         NSDictionary *context = [params valueForKey:@"dataModifier"];
         if(context.allKeys.count>0){
             [dataModifierDict addEntriesFromDictionary:context];
@@ -145,8 +146,9 @@ void install(const char* json){
     }
 
 
-    NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
+
     if ([params.allKeys containsObject:@"lineDataModifier"]) {
+        NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
         NSDictionary *context = [params valueForKey:@"lineDataModifier"];
         if(context.allKeys.count>0){
             [dataModifierDict addEntriesFromDictionary:context];
@@ -253,7 +255,7 @@ void initRUMConfig(const char* rumConfigJson){
     if ([params.allKeys containsObject:@"sampleRate"]) {
         rumConfig.samplerate = [params[@"sampleRate"] doubleValue] * 100;
     }
-     if ([context.allKeys containsObject:@"sessionOnErrorSampleRate"]) {
+     if ([params.allKeys containsObject:@"sessionOnErrorSampleRate"]) {
         rumConfig.sessionOnErrorSampleRate  = [params[@"sessionOnErrorSampleRate"] doubleValue] * 100;
      }
     if ([params.allKeys containsObject:@"enableNativeUserAction"]) {
@@ -475,7 +477,7 @@ void addResource(const char* json){
     }
     NSString *resourceId = [configDict objectForKey:@"resourceId"];
     NSDictionary *params = [configDict objectForKey:@"resourceParams"];
-    NSDictionary *netStatus = [configDict objectForKey:@"netStatus"];
+//    NSDictionary *netStatus = [configDict objectForKey:@"netStatus"];
     
     FTResourceContentModel *content = [[FTResourceContentModel alloc]init];
     id requestHeader =  [params objectForKey:@"requestHeader"];
@@ -491,35 +493,40 @@ void addResource(const char* json){
     content.url = [NSURL URLWithString:[params objectForKey:@"url"]];
     content.httpStatusCode = [[params objectForKey:@"resourceStatus"] integerValue];
     FTResourceMetricsModel *metrics = [[FTResourceMetricsModel alloc]init];
-    if(netStatus){
-        long tcpStartTime = [[netStatus objectForKey:@"tcpStartTime"] longValue];
-        long tcpEndTime = [[netStatus objectForKey:@"tcpEndTime"] longValue];
-        NSNumber  *tcpTime = @(tcpEndTime - tcpStartTime);
-        
-        long dnsEndTime = [[netStatus objectForKey:@"dnsEndTime"] longValue];
-        long dnsStartTime = [[netStatus objectForKey:@"dnsStartTime"] longValue];
-        NSNumber * dnsTime = @(dnsEndTime - dnsStartTime);
-        
-        long sslEndTime = [[netStatus objectForKey:@"sslEndTime"] longValue];
-        long sslStartTime = [[netStatus objectForKey:@"sslStartTime"] longValue];
-        NSNumber * sslTime = @(sslEndTime - sslStartTime);
-        
-        long responseEndTime = [[netStatus objectForKey:@"responseEndTime"] longValue];
-        long responseStartTime = [[netStatus objectForKey:@"responseStartTime"] longValue];
-        long requestStartTime = [[netStatus objectForKey:@"requestStartTime"] longValue];
-        NSNumber * ttfb = @(responseStartTime - requestStartTime);
-        NSNumber *transTime = @(responseEndTime - responseStartTime);
-        
-        long fetchStartTime = [[netStatus objectForKey:@"fetchStartTime"] longValue];
-        NSNumber * duration = @(responseEndTime - fetchStartTime);
-        
-        metrics.resource_tcp = tcpTime;
-        metrics.resource_dns = dnsTime;
-        metrics.resource_ssl = sslTime;
-        metrics.resource_trans = transTime;
-        metrics.resource_ttfb = ttfb;
-        metrics.duration = duration;
-    }
+//    if(netStatus){
+//        long tcpStartTime = [[netStatus objectForKey:@"tcpStartTime"] longValue];
+//        long tcpEndTime = [[netStatus objectForKey:@"tcpEndTime"] longValue];
+//        NSNumber  *tcpTime = @(tcpEndTime - tcpStartTime);
+//        
+//        long dnsEndTime = [[netStatus objectForKey:@"dnsEndTime"] longValue];
+//        long dnsStartTime = [[netStatus objectForKey:@"dnsStartTime"] longValue];
+//        NSNumber * dnsTime = @(dnsEndTime - dnsStartTime);
+//        
+//        long sslEndTime = [[netStatus objectForKey:@"sslEndTime"] longValue];
+//        long sslStartTime = [[netStatus objectForKey:@"sslStartTime"] longValue];
+//        NSNumber * sslTime = @(sslEndTime - sslStartTime);
+//        
+//        long bodyEndTime = [[netStatus objectForKey:@"bodyEndTime"] longValue];
+//        long bodyStartTime = [[netStatus objectForKey:@"bodyStartTime"] longValue];
+//        long callStartTime = [[netStatus objectForKey:@"callStartTime"] longValue];
+//        long headerStartTime = [[netStatus objectForKey:@"headerStartTime"] longValue];
+//        long headerEndTime = [[netStatus objectForKey:@"headerEndTime"] longValue];
+//        
+//    
+//        
+//        NSNumber * ttfb = @(bodyStartTime - callStartTime);
+//        NSNumber *transTime = @(bodyEndTime - bodyStartTime);
+//        
+//
+//        NSNumber * duration = @(bodyEndTime - callStartTime);
+//        
+//        metrics.resource_tcp = tcpTime;
+//        metrics.resource_dns = dnsTime;
+//        metrics.resource_ssl = sslTime;
+//        metrics.resource_trans = transTime;
+//        metrics.resource_ttfb = ttfb;
+//        metrics.duration = duration;
+//    }
     [FTExternalDataManager.sharedManager addResourceWithKey:resourceId metrics:metrics content:content];
 }
 

@@ -85,10 +85,7 @@ public class ClickEvent : MonoBehaviour
                     resourceParams.resourceStatus = (int)response.StatusCode;
                     resourceParams.responseBody = responseData;
                     resourceParams.resourceMethod = "GET";
-                    NetStatus netStatus = new NetStatus();
-                    netStatus.fetchStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() * 1000000;
-
-                    FTUnityBridge.AddResource(resourceId, resourceParams, netStatus);
+                    FTUnityBridge.AddResource(resourceId, resourceParams);
 
                 }
                 catch (HttpRequestException e)
