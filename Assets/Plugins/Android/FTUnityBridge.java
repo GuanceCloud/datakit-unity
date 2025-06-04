@@ -1,7 +1,11 @@
 package com.ft.sdk.unity.bridge;
 
+import static com.ft.sdk.garble.utils.Constants.FT_LOG_DEFAULT_MEASUREMENT;
+
 import android.util.Log;
 
+import com.ft.sdk.DBCacheDiscard;
+import com.ft.sdk.DataModifier;
 import com.ft.sdk.DetectFrequency;
 import com.ft.sdk.DeviceMetricsMonitorType;
 import com.ft.sdk.ErrorMonitorType;
@@ -13,7 +17,10 @@ import com.ft.sdk.FTSDKConfig;
 import com.ft.sdk.FTSdk;
 import com.ft.sdk.FTTraceConfig;
 import com.ft.sdk.FTTraceManager;
+import com.ft.sdk.InnerClassProxy;
+import com.ft.sdk.LineDataModifier;
 import com.ft.sdk.LogCacheDiscard;
+import com.ft.sdk.RUMCacheDiscard;
 import com.ft.sdk.TraceType;
 import com.ft.sdk.garble.bean.AppState;
 import com.ft.sdk.garble.bean.NetStatusBean;
@@ -28,6 +35,7 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 public class FTUnityBridge {
 
@@ -35,8 +43,13 @@ public class FTUnityBridge {
     private static final String METHOD_INSTALL = "Install";
     private static final String METHOD_DE_INIT = "DeInit";
     private static final String METHOD_BIND_USER_DATA = "BindUserData";
+    private static final String METHOD_APPEND_GLOBAL_CONTEXT = "AppendGlobalContext";
+    private static final String METHOD_APPEND_LOG_GLOBAL_CONTEXT = "AppendLogGlobalContext";
+    private static final String METHOD_APPEND_RUM_GLOBAL_CONTEXT = "AppendRUMGlobalContext";
+    private static final String METHOD_FLUSH_SYNC_DATA = "FlushSyncData";
+    private static final String METHOD_FLUSH_CLEAR_ALL_DATA = "ClearAllData";
     private static final String METHOD_UN_BIND_USERDATA = "UnBindUserdata";
-    public static final String METHOD_INIT_RUM_CONFIG = "InitRUMConfig";
+    private static final String METHOD_INIT_RUM_CONFIG = "InitRUMConfig";
     private static final String METHOD_CREATE_VIEW = "CreateView";
     private static final String METHOD_START_VIEW = "StartView";
     private static final String METHOD_STOP_VIEW = "StopView";
@@ -103,6 +116,16 @@ public class FTUnityBridge {
                 initTraceConfig(data);
             } else if (METHOD_INIT_GET_TRACE_HEADER.equals(method)) {
                 return getTraceHeader(data);
+            } else if (METHOD_APPEND_GLOBAL_CONTEXT.equals(method)) {
+                appendGlobalContext(data);
+            } else if (METHOD_APPEND_LOG_GLOBAL_CONTEXT.equals(method)) {
+                appendLogGlobalContext(data);
+            } else if (METHOD_APPEND_RUM_GLOBAL_CONTEXT.equals(method)) {
+                appendRUMGlobalContext(data);
+            } else if (METHOD_FLUSH_SYNC_DATA.equals(method)) {
+                flushSyncData();
+            } else if (METHOD_FLUSH_CLEAR_ALL_DATA.equals(method)) {
+                clearAllData();
             }
         } catch (JSONException e) {
             LogUtils.e(TAG, Log.getStackTraceString(e));
@@ -117,33 +140,103 @@ public class FTUnityBridge {
      * @param data
      */
     private static void install(JSONObject data) {
-        String datakitUrl = data.optString("datakitUrl", null);
-        if (datakitUrl == null || datakitUrl.isEmpty()) {
-            datakitUrl = data.optString("serverUrl", null);
+        HashMap<String, Object> map = convertJSONtoHashMap(data);
+        String serverUrl = (String) map.get("serverUrl");
+        String datakitUrl = (String) map.get("datakitUrl");
+        if (datakitUrl == null) {
+            //兼容旧版本
+            datakitUrl = serverUrl;
         }
-        String datawayUrl = data.optString("datawayUrl", null);
-        String cliToken = data.optString("cliToken", null);
-        if (datakitUrl != null || (datawayUrl != null && cliToken != null)) {
-            FTSDKConfig config = datakitUrl != null ? FTSDKConfig.builder(datakitUrl) : FTSDKConfig.builder(datawayUrl, cliToken);
-            config.setDebug(data.optBoolean("debug", false));
-            String env = data.optString("env", null);
-            if (env != null) {
-                config.setEnv(env);
-            }
+        String datawayUrl = (String) map.get("datawayUrl");
+        String cliToken = (String) map.get("clientToken");
+        Boolean debug = (Boolean) map.get("debug");
+        Boolean autoSync = (Boolean) map.get("autoSync");
+        Number syncPageSize = (Number) map.get("syncPageSize");
+        Number syncSleepTime = (Number) map.get("syncSleepTime");
+        Boolean enableDataIntegerCompatible = (Boolean) map.get("enableDataIntegerCompatible");
+        Boolean compressIntakeRequests = (Boolean) map.get("compressIntakeRequests");
+        String serviceName = (String) map.get("serviceName");
+        JSONObject globalContextJson = (JSONObject) map.get("globalContext");
+        Boolean enableLimitWithDbSize = (Boolean) map.get("enableLimitWithDbSize");
+        Number dbCacheLimit = (Number) (map.get("dbCacheLimit"));
+        Object dbDiscardStrategy = map.get("dbDiscardStrategy");
+        JSONObject dataModifier = (JSONObject) map.get("dataModifier");
+        JSONObject lineDataModifier = (JSONObject) map.get("lineDataModifier");
 
-            JSONObject globalContext = data.optJSONObject("globalContext");
-            if (globalContext != null) {
-                for (Iterator<String> it = globalContext.keys(); it.hasNext(); ) {
-                    String key = it.next();
-                    config.addGlobalContext(key, globalContext.optString(key));
+        FTSDKConfig sdkConfig = (datakitUrl != null)
+                ? FTSDKConfig.builder(datakitUrl)
+                : FTSDKConfig.builder(datawayUrl, cliToken);
+
+        String envString = (String) map.get("env");
+        if (envString != null) {
+            sdkConfig.setEnv(envString);
+        }
+        if (debug != null) {
+            sdkConfig.setDebug(debug);
+        }
+        if (serviceName != null) {
+            sdkConfig.setServiceName(serviceName);
+        }
+        if (autoSync != null) {
+            sdkConfig.setAutoSync(autoSync);
+        }
+        if (syncPageSize != null) {
+            sdkConfig.setCustomSyncPageSize(syncPageSize.intValue());
+        }
+        if (syncSleepTime != null) {
+            sdkConfig.setSyncSleepTime(syncSleepTime.intValue());
+        }
+        if (enableDataIntegerCompatible != null && enableDataIntegerCompatible) {
+            sdkConfig.enableDataIntegerCompatible();
+        }
+        if (compressIntakeRequests != null && compressIntakeRequests) {
+            sdkConfig.setCompressIntakeRequests(compressIntakeRequests);
+        }
+        if (globalContextJson != null) {
+            Map<String, Object> globalContext = convertJSONtoHashMap(globalContextJson);
+
+            for (Map.Entry<String, Object> entry : globalContext.entrySet()) {
+                sdkConfig.addGlobalContext(entry.getKey(), entry.getValue().toString());
+            }
+        }
+        if (enableLimitWithDbSize != null && enableLimitWithDbSize) {
+            if (dbCacheLimit != null) {
+                sdkConfig.enableLimitWithDbSize(dbCacheLimit.longValue());
+            } else {
+                sdkConfig.enableLimitWithDbSize();
+            }
+        }
+        if (dbDiscardStrategy != null) {
+            if (dbDiscardStrategy.equals("discardOldest")) {
+                sdkConfig.setDbCacheDiscard(DBCacheDiscard.DISCARD_OLDEST);
+            } else if (dbDiscardStrategy.equals("discard")) {
+                sdkConfig.setDbCacheDiscard(DBCacheDiscard.DISCARD);
+            }
+        }
+
+        if (dataModifier != null) {
+            sdkConfig.setDataModifier(new DataModifier() {
+                @Override
+                public Object modify(String key, Object value) {
+                    return dataModifier.opt(key);
                 }
-            }
+            });
+        }
+        if (lineDataModifier != null) {
+            sdkConfig.setLineDataModifier(new LineDataModifier() {
+                @Override
+                public Map<String, Object> modify(String measurement, HashMap<String, Object> data) {
+                    if (measurement.equals(FT_LOG_DEFAULT_MEASUREMENT)) {
+                        return convertJSONtoHashMap(lineDataModifier.optJSONObject("log"));
+                    } else {
+                        return convertJSONtoHashMap(lineDataModifier.optJSONObject(measurement));
+                    }
+                }
+            });
 
-            String service = data.optString("serviceName", null);
-            if (service != null) {
-                config.setServiceName(service);
-            }
-            FTSdk.install(config);
+            InnerClassProxy.addPkgInfo(sdkConfig, "unity", (String) map.get("sdkVersion"));
+
+            FTSdk.install(sdkConfig);
         }
     }
 
@@ -199,48 +292,148 @@ public class FTUnityBridge {
      * @param data
      */
     private static void initRUMConfig(JSONObject data) {
-        FTRUMConfig rumConfig = new FTRUMConfig();
-        String appId = data.optString("androidAppId", null);
-        rumConfig.setRumAppId(appId);
-        String sampleRate = data.optString("sampleRate", null);
+        Map<String, Object> map = convertJSONtoHashMap(data);
+        JSONObject globalContextJson = (JSONObject) map.get("globalContext");
+        String rumAppId = (String) map.get("androidAppId");
+        Number sampleRate = (Number) map.get("sampleRate");
+        Number sessionOnErrorSampleRate = (Number) map.get("sessionOnErrorSampleRate");
+        Boolean enableNativeUserAction = (Boolean) map.get("enableNativeUserAction");
+        Boolean enableNativeUserView = (Boolean) map.get("enableNativeUserView");
+        Boolean enableNativeUserResource = (Boolean) map.get("enableNativeUserResource");
+        Boolean enableResourceHostIP = (Boolean) map.get("enableResourceHostIP");
+        Boolean enableTrackNativeCrash = (Boolean) map.get("enableTrackNativeCrash");
+        Boolean enableTrackNativeAppANR = (Boolean) map.get("enableTrackNativeAppANR");
+        Boolean enableTrackNativeFreeze = (Boolean) map.get("enableTrackNativeFreeze");
+        Number nativeFreezeDurationMs = (Number) map.get("nativeFreezeDurationMs");
+        Object errorType = map.get("extraMonitorTypeWithError");
+        Object deviceType = map.get("deviceMonitorType");
+        Object detectFrequencyStr = map.get("detectFrequency");
+        Number rumCacheLimitCount = (Number) map.get("rumCacheLimitCount");
+        Object rumDiscardStrategy = map.get("rumDiscardStrategy");
+        FTRUMConfig rumConfig = new FTRUMConfig().setRumAppId(rumAppId);
         if (sampleRate != null) {
-            rumConfig.setSamplingRate(Float.valueOf(sampleRate));
+            rumConfig.setSamplingRate(sampleRate.floatValue());
         }
-        boolean enableNativeUserAction = data.optBoolean("enableNativeUserAction");
-        rumConfig.setEnableTraceUserAction(enableNativeUserAction);
-
-        boolean enableNativeUserView = data.optBoolean("enableNativeUserView");
-        rumConfig.setEnableTraceUserAction(enableNativeUserView);
-
-        boolean enableNativeUserResource = data.optBoolean("enableNativeUserResource");
-        rumConfig.setEnableTraceUserAction(enableNativeUserResource);
-
-        int errorMonitorType = data.optInt("extraMonitorTypeWithError", ErrorMonitorType.NO_SET);
-        rumConfig.setExtraMonitorTypeWithError(errorMonitorType);
-
-        Object deviceType = data.opt("deviceMonitorType");
+        if (sessionOnErrorSampleRate != null) {
+            rumConfig.setSessionErrorSampleRate(sessionOnErrorSampleRate.floatValue());
+        }
+        if (enableNativeUserAction != null) {
+            rumConfig.setEnableTraceUserAction(enableNativeUserAction);
+        }
+        if (enableNativeUserView != null) {
+            rumConfig.setEnableTraceUserView(enableNativeUserView);
+        }
+        if (enableNativeUserResource != null) {
+            rumConfig.setEnableTraceUserResource(enableNativeUserResource);
+        }
+        if (enableResourceHostIP != null) {
+            rumConfig.setEnableResourceHostIP(enableResourceHostIP);
+        }
+        if (enableTrackNativeCrash != null) {
+            rumConfig.setEnableTrackAppCrash(enableTrackNativeCrash);
+        }
+        if (enableTrackNativeFreeze != null) {
+            if (nativeFreezeDurationMs != null) {
+                rumConfig.setEnableTrackAppUIBlock(enableTrackNativeFreeze, nativeFreezeDurationMs.longValue());
+            } else {
+                rumConfig.setEnableTrackAppUIBlock(enableTrackNativeFreeze);
+            }
+        }
+        if (enableTrackNativeAppANR != null) {
+            rumConfig.setEnableTrackAppANR(enableTrackNativeAppANR);
+        }
+        if (errorType != null) {
+            int errorMonitorType = ErrorMonitorType.NO_SET;
+            if (errorType instanceof String) {
+                if (errorType.equals("all")) {
+                    errorMonitorType = ErrorMonitorType.ALL.getValue();
+                } else if (errorType.equals("battery")) {
+                    errorMonitorType = ErrorMonitorType.BATTERY.getValue();
+                } else if (errorType.equals("memory")) {
+                    errorMonitorType = ErrorMonitorType.MEMORY.getValue();
+                } else if (errorType.equals("cpu")) {
+                    errorMonitorType = ErrorMonitorType.CPU.getValue();
+                }
+            } else if (errorType instanceof JSONArray) {
+                JSONArray errorTypeArr = (JSONArray) errorType;
+                for (int i = 0; i < errorTypeArr.length(); i++) {
+                    String errorTypeStr = errorTypeArr.optString(i);
+                    if (errorTypeStr.equals("all")) {
+                        errorMonitorType |= ErrorMonitorType.ALL.getValue();
+                    } else if (errorTypeStr.equals("battery")) {
+                        errorMonitorType |= ErrorMonitorType.BATTERY.getValue();
+                    } else if (errorTypeStr.equals("memory")) {
+                        errorMonitorType |= ErrorMonitorType.MEMORY.getValue();
+                    } else if (errorTypeStr.equals("cpu")) {
+                        errorMonitorType |= ErrorMonitorType.CPU.getValue();
+                    }
+                }
+            }
+            rumConfig.setExtraMonitorTypeWithError(errorMonitorType);
+        }
         if (deviceType != null) {
-            String detectFrequencyStr = data.optString("detectFrequency", null);
+
             DetectFrequency detectFrequency = DetectFrequency.DEFAULT;
             if (detectFrequencyStr != null) {
+//                if (detectFrequencyStr.equals("normal")) {
+//                    detectFrequency = DetectFrequency.DEFAULT;
+//                } else
                 if (detectFrequencyStr.equals("frequent")) {
                     detectFrequency = DetectFrequency.FREQUENT;
                 } else if (detectFrequencyStr.equals("rare")) {
                     detectFrequency = DetectFrequency.RARE;
                 }
             }
-            int deviceMonitorType = data.optInt("deviceMonitorType", DeviceMetricsMonitorType.NO_SET);
+
+            int deviceMonitorType = DeviceMetricsMonitorType.NO_SET;
+            if (deviceType instanceof String) {
+                if (deviceType.equals("all")) {
+                    deviceMonitorType = DeviceMetricsMonitorType.ALL.getValue();
+                } else if (deviceType.equals("battery")) {
+                    deviceMonitorType = DeviceMetricsMonitorType.BATTERY.getValue();
+                } else if (deviceType.equals("memory")) {
+                    deviceMonitorType = DeviceMetricsMonitorType.MEMORY.getValue();
+                } else if (deviceType.equals("cpu")) {
+                    deviceMonitorType = DeviceMetricsMonitorType.CPU.getValue();
+                } else if (deviceType.equals("fps")) {
+                    deviceMonitorType = DeviceMetricsMonitorType.FPS.getValue();
+                }
+            } else if (deviceType instanceof JSONArray) {
+                JSONArray deviceTypeArr = (JSONArray) deviceType;
+                for (int i = 0; i < deviceTypeArr.length(); i++) {
+                    String deviceTypeStr = deviceTypeArr.optString(i);
+                    if (deviceTypeStr.equals("all")) {
+                        deviceMonitorType |= DeviceMetricsMonitorType.ALL.getValue();
+                    } else if (deviceTypeStr.equals("battery")) {
+                        deviceMonitorType |= DeviceMetricsMonitorType.BATTERY.getValue();
+                    } else if (deviceTypeStr.equals("memory")) {
+                        deviceMonitorType |= DeviceMetricsMonitorType.MEMORY.getValue();
+                    } else if (deviceTypeStr.equals("cpu")) {
+                        deviceMonitorType |= DeviceMetricsMonitorType.CPU.getValue();
+                    } else if (deviceTypeStr.equals("fps")) {
+                        deviceMonitorType |= DeviceMetricsMonitorType.FPS.getValue();
+                    }
+                }
+            }
             rumConfig.setDeviceMetricsMonitorType(deviceMonitorType, detectFrequency);
         }
 
-        JSONObject globalContext = data.optJSONObject("globalContext");
-        if (globalContext != null) {
-            for (Iterator<String> it = globalContext.keys(); it.hasNext(); ) {
-                String key = it.next();
-                rumConfig.addGlobalContext(key, globalContext.optString(key));
+        if (globalContextJson != null) {
+            Map<String, Object> globalContext = convertJSONtoHashMap(globalContextJson);
+            for (Map.Entry<String, Object> entry : globalContext.entrySet()) {
+                rumConfig.addGlobalContext(entry.getKey(), entry.getValue().toString());
             }
         }
-
+        if (rumCacheLimitCount != null) {
+            rumConfig.setRumCacheLimitCount(rumCacheLimitCount.intValue());
+        }
+        if (rumDiscardStrategy != null) {
+            if (rumDiscardStrategy.equals("discardOldest")) {
+                rumConfig.setRumCacheDiscardStrategy(RUMCacheDiscard.DISCARD_OLDEST);
+            } else if (rumDiscardStrategy.equals("discard")) {
+                rumConfig.setRumCacheDiscardStrategy(RUMCacheDiscard.DISCARD);
+            }
+        }
         FTSdk.initRUMWithConfig(rumConfig);
     }
 
@@ -373,14 +566,17 @@ public class FTUnityBridge {
      * @param data
      */
     private static void addError(JSONObject data) {
-        String message = data.optString("log");
-        String stack = data.optString("message");
+        String message = data.optString("message");
+        String stack = data.optString("log");
         String errorType = data.optString("errorType");
         String state = data.optString("state");
         JSONObject property = data.optJSONObject("property");
         HashMap<String, Object> params = convertJSONtoHashMap(property);
-        FTRUMGlobalManager.get().addError(message, stack,
-                errorType, AppState.getValueFrom(state), params);
+        AppState appState = AppState.UNKNOWN;
+        if (state != null) {
+            appState = AppState.getValueFrom(state);
+        }
+        FTRUMGlobalManager.get().addError(stack, message, errorType, appState, params);
     }
 
     /**
@@ -401,34 +597,38 @@ public class FTUnityBridge {
      * @param data
      */
     private static void initLogConfig(JSONObject data) {
-        FTLoggerConfig config = new FTLoggerConfig();
+        Map<String, Object> map = convertJSONtoHashMap(data);
+        JSONObject globalContextJson = (JSONObject) map.get("globalContext");
+        String discardStrategy = (String) (map.get("discardStrategy"));
+        Number sampleRate = (Number) map.get("sampleRate");
+        JSONArray logTypeReadArr = (JSONArray) map.get("logLevelFilters");
+        Boolean enableLinkRumData = (Boolean) map.get("enableLinkRumData");
+        Boolean enableCustomLog = (Boolean) map.get("enableCustomLog");
+        Number logCacheLimitCount = (Number) map.get("logCacheLimitCount");
 
-        String sampleRate = data.optString("sampleRate", null);
-        if (sampleRate != null) {
-            config.setSamplingRate(Float.valueOf(sampleRate));
+        FTLoggerConfig logConfig = new FTLoggerConfig();
+
+        if (enableCustomLog != null) {
+            logConfig.setEnableCustomLog(enableCustomLog);
         }
-        boolean enableLinkRumData = data.optBoolean("enableLinkRumData");
-        config.setEnableLinkRumData(enableLinkRumData);
+        if (sampleRate != null) {
+            logConfig.setSamplingRate(sampleRate.floatValue());
+        }
 
-        boolean enableCustomLog = data.optBoolean("enableCustomLog");
-        config.setEnableCustomLog(enableCustomLog);
-
-        String discardStrategy = data.optString("discardStrategy", null);
         if (discardStrategy != null) {
             if (discardStrategy.equals("discardOldest")) {
-                config.setLogCacheDiscardStrategy(LogCacheDiscard.DISCARD_OLDEST);
+                logConfig.setLogCacheDiscardStrategy(LogCacheDiscard.DISCARD_OLDEST);
             } else if (discardStrategy.equals("discard")) {
-                config.setLogCacheDiscardStrategy(LogCacheDiscard.DISCARD);
+                logConfig.setLogCacheDiscardStrategy(LogCacheDiscard.DISCARD);
             }
-
         }
-        JSONArray logLevelFilters = data.optJSONArray("logLevelFilters");
-        if (logLevelFilters != null) {
-            Status[] statuses = new Status[logLevelFilters.length()];
-            for (int i = 0; i < logLevelFilters.length(); i++) {
+
+        if (logTypeReadArr != null) {
+            Status[] statuses = new Status[logTypeReadArr.length()];
+            for (int i = 0; i < logTypeReadArr.length(); i++) {
                 Status logStatus = null;
                 for (Status value : Status.values()) {
-                    if (value.name.equals(logLevelFilters.optString(i))) {
+                    if (value.name.equals(logTypeReadArr.optString(i))) {
                         logStatus = value;
                         break;
                     }
@@ -436,19 +636,30 @@ public class FTUnityBridge {
                 statuses[i] = logStatus;
             }
 
-            config.setLogLevelFilters(statuses);
+            logConfig.setLogLevelFilters(statuses);
 
         }
 
-        JSONObject globalContext = data.optJSONObject("globalContext");
-        if (globalContext != null) {
-            for (Iterator<String> it = globalContext.keys(); it.hasNext(); ) {
-                String key = it.next();
-                config.addGlobalContext(key, globalContext.optString(key));
+        if (enableLinkRumData != null) {
+            logConfig.setEnableLinkRumData(enableLinkRumData);
+        }
+
+        if (enableCustomLog != null) {
+            logConfig.setEnableCustomLog(enableCustomLog);
+        }
+
+        if (globalContextJson != null) {
+            Map<String, Object> globalContext = convertJSONtoHashMap(globalContextJson);
+            for (Map.Entry<String, Object> entry : globalContext.entrySet()) {
+                logConfig.addGlobalContext(entry.getKey(), entry.getValue().toString());
             }
         }
 
-        FTSdk.initLogWithConfig(config);
+        if (logCacheLimitCount != null) {
+            logConfig.setLogCacheLimitCount(logCacheLimitCount.intValue());
+        }
+
+        FTSdk.initLogWithConfig(logConfig);
     }
 
     private static void addLog(JSONObject data) {
@@ -474,38 +685,42 @@ public class FTUnityBridge {
      * @param data
      */
     private static void initTraceConfig(JSONObject data) {
-        FTTraceConfig config = new FTTraceConfig();
-        String sampleRate = data.optString("sampleRate", null);
+        Map<String, Object> map = convertJSONtoHashMap(data);
+        Number sampleRate = (Number) map.get("sampleRate");
+        Object traceType = map.get("traceType");
+        Boolean enableLinkRUMData = (Boolean) map.get("enableLinkRUMData");
+        Boolean enableNativeAutoTrace = (Boolean) map.get("enableNativeAutoTrace");
+
+        FTTraceConfig traceConfig = new FTTraceConfig();
         if (sampleRate != null) {
-            config.setSamplingRate(Float.valueOf(sampleRate));
+            traceConfig.setSamplingRate(sampleRate.floatValue());
         }
 
-        String traceType = data.optString("traceType", null);
         if (traceType != null) {
-            if (traceType.equals("ddtrace")) {
-                config.setTraceType(TraceType.DDTRACE);
-            } else if (traceType.equals("zipkinMulti")) {
-                config.setTraceType(TraceType.ZIPKIN_MULTI_HEADER);
-            } else if (traceType.equals("zipkinSingle")) {
-                config.setTraceType(TraceType.ZIPKIN_SINGLE_HEADER);
+            if (traceType.equals("ddTrace")) {
+                traceConfig.setTraceType(TraceType.DDTRACE);
+            } else if (traceType.equals("zipkinMultiHeader")) {
+                traceConfig.setTraceType(TraceType.ZIPKIN_MULTI_HEADER);
+            } else if (traceType.equals("zipkinSingleHeader")) {
+                traceConfig.setTraceType(TraceType.ZIPKIN_SINGLE_HEADER);
             } else if (traceType.equals("traceparent")) {
-                config.setTraceType(TraceType.TRACEPARENT);
+                traceConfig.setTraceType(TraceType.TRACEPARENT);
             } else if (traceType.equals("skywalking")) {
-                config.setTraceType(TraceType.SKYWALKING);
+                traceConfig.setTraceType(TraceType.SKYWALKING);
             } else if (traceType.equals("jaeger")) {
-                config.setTraceType(TraceType.JAEGER);
+                traceConfig.setTraceType(TraceType.JAEGER);
             }
         }
 
-        Boolean enableLinkRumData = data.optBoolean("enableLinkRumData");
-        if (enableLinkRumData != null) {
-            config.setEnableLinkRUMData(enableLinkRumData);
+        if (enableLinkRUMData != null) {
+            traceConfig.setEnableLinkRUMData(enableLinkRUMData);
         }
-        Boolean enableAutoTrace = data.optBoolean("enableAutoTrace");
-        if (enableAutoTrace != null) {
-            config.setEnableAutoTrace(enableAutoTrace);
+
+        if (enableNativeAutoTrace != null) {
+            traceConfig.setEnableAutoTrace(enableNativeAutoTrace);
         }
-        FTSdk.initTraceWithConfig(config);
+
+        FTSdk.initTraceWithConfig(traceConfig);
     }
 
     private static String getTraceHeader(JSONObject data) {
@@ -529,6 +744,49 @@ public class FTUnityBridge {
 
     }
 
+
+    /**
+     * 动态设置全局 tag
+     */
+    private static void appendGlobalContext(JSONObject extra) {
+        if (extra != null) {
+            FTSdk.appendGlobalContext(convertJSONtoHashMap(extra));
+        }
+    }
+
+
+    /**
+     * 动态设置 log 全局 tag
+     */
+    private static void appendLogGlobalContext(JSONObject extra) {
+        if (extra != null) {
+            FTSdk.appendLogGlobalContext(convertJSONtoHashMap(extra));
+        }
+    }
+
+    /**
+     * 动态设置 RUM 全局 tag
+     */
+    private static void appendRUMGlobalContext(JSONObject extra) {
+        if (extra != null) {
+            FTSdk.appendRUMGlobalContext(convertJSONtoHashMap(extra));
+        }
+    }
+
+    /**
+     * 进行缓存数据同步
+     */
+    private static void flushSyncData() {
+        FTSdk.flushSyncData();
+
+    }
+
+    /**
+     * 清理 SDK 数据
+     */
+    private static void clearAllData() {
+        FTSdk.clearAllData();
+    }
 
     /**
      * 转化 JSON 为 hashMap

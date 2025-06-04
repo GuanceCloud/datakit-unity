@@ -5,10 +5,12 @@ using UnityEngine;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-
-
-
-
+using UnityEditor;
+using Unity.VisualScripting;
+using Newtonsoft.Json.Serialization;
+using System.Reflection;
+using System.Collections;
+using System.Linq;
 
 namespace FTSDK.Unity.Bridge
 {
@@ -37,9 +39,7 @@ namespace FTSDK.Unity.Bridge
         /// <summary>
         /// 认证 token，需要与 datawayUrl 同时配置
         /// </summary>
-        public string cliToken { get; set; }
-
-
+        public string clientToken { get; set; }
         /// <summary>
         /// 是否开启 Debug 模式
         /// </summary>
@@ -53,6 +53,60 @@ namespace FTSDK.Unity.Bridge
         /// 应用服务名 android df_rum_android, iOS df_rum_ios
         /// </summary>
         public string serviceName { get; set; }
+        /// <summary>
+        /// 是否在采集数据后自动同步到服务器，默认为 true。当为 false 时使用 FTUnityBridge.flushSyncData() 自行管理数据同步
+        /// </summary>
+        public bool autoSync { get; set; }
+        /// <summary>
+        /// 设置同步请求条目数。范围 [5,）注意：请求条目数越大，代表数据同步占用更大的计算资源，默认为 10
+        /// </summary>
+        public int syncPageSize { get; set; }
+        /// <summary>
+        /// 设置同步间歇时间。范围 [0,5000]，单位毫秒，默认不设置
+        /// </summary>
+        public int syncSleepTime { get; set; }
+        /// <summary>
+        /// 需要与 web 数据共存情况下，建议开启。此配置用于处理 web 数据类型存储兼容问题，默认开启
+        /// </summary>
+        public bool enableDataIntegerCompatible { get; set; }
+        /// <summary>
+        /// 对上传同步数据进行 deflate 压缩，默认关闭
+        /// </summary>
+        public bool compressIntakeRequests { get; set; }
+        /// <summary>
+        /// 开启使用 db 限制数据大小，默认 100MB，单位 Byte，数据库越大，磁盘压力越大，默认不开启。
+        /// 注意：开启之后 Log 配置 logCacheLimitCount 及 RUM 配置rumCacheLimitCount 将失效
+        /// </summary>
+        public bool enableLimitWithDbSize { get; set; }
+        /// <summary>
+        /// DB 缓存限制大小。范围 [30MB,)，默认 100MB，单位 byte
+        /// </summary>
+        public int dbCacheLimit { get; set; }
+        /// <summary>
+        /// 设置数据库中数据丢弃规则。
+        ///丢弃策略：discard丢弃新数据（默认）、discardOldest丢弃旧数据
+        /// </summary>
+        public DBCacheDiscard dbDiscardStrategy { get; set; }
+        /// <summary>
+        /// 对单个字段进行更改
+        /// </summary>
+        public Dictionary<string, object> dataModifier { get; set; }
+        /// <summary>
+        ///  对单条数据数据进行更改。
+        /// </summary>
+        public Dictionary<string, Dictionary<string, object>> lineDataModifier { get; set; }
+
+        /// <summary>
+        /// Unity SDK 版本号
+        /// </summary>
+        public string sdkVersion
+        {
+            get
+            {
+                return FTUnityBridge.SDK_VERSION;
+            }
+
+        }
 
     }
 
@@ -71,9 +125,14 @@ namespace FTSDK.Unity.Bridge
         public string iOSAppId { get; set; }
 
         /// <summary>
-        /// 采集率的值范围为>= 0、<= 1，默认值为 1
+        /// 采集率的值范围为[0,1]，默认值为 1
         /// </summary>
         public float sampleRate { get; set; }
+
+        /// <summary>
+        /// 错误会话采样率的值范围为[0,1]，默认值为 0。未被采样命中的 Session ，命中 ERROR 采样，发生错误时，采集错误前 1 分钟数据
+        /// </summary>
+        public float sessionOnErrorSampleRate { get; set; }
 
         /// <summary>
         /// 添加 SDK 全局属性
@@ -93,6 +152,26 @@ namespace FTSDK.Unity.Bridge
         /// </summary>
         public bool enableNativeUserResource { get; set; }
         /// <summary>
+        /// 是否采集请求目标域名地址的 IP。作用域：只影响 enableNativeUserResource 为 true 的默认采集。iOS：>= iOS 13 下支持。Android：单个 Okhttp 对相同域名存在 IP 缓存机制，相同 OkhttpClient，在连接服务端 IP 不发生变化的前提下，只会生成一次
+        /// </summary>
+        public bool enableResourceHostIP { get; set; }
+        /// <summary>
+        /// 是否采集 Native Java Crash、C/C++ Crash 
+        /// </summary>
+        public bool enableTrackNativeCrash { get; set; }
+        /// <summary>
+        /// 是否开启 `Native ANR` 监测，默认为 `false`
+        /// </summary>
+        public bool enableTrackNativeAppANR { get; set; }
+        /// <summary>
+        /// 是否进行 `Native Freeze` 自动追踪，默认为 `false`
+        /// </summary>
+        public bool enableTrackNativeFreeze { get; set; }
+        /// <summary>
+        /// 设置采集 `Native Freeze`卡顿的阈值，取值范围 [100,)，单位毫秒。iOS 默认 250ms，Android 默认 1000ms
+        /// </summary>
+        public int nativeFreezeDurationMs { get; set; }
+        /// <summary>
         /// 错误监控补充类型：all、battery、 memory、 cpu
         /// </summary>
         public ErrorMonitorType extraMonitorTypeWithError { get; set; }
@@ -104,6 +183,14 @@ namespace FTSDK.Unity.Bridge
         /// normal(默认)、 frequent、rare
         /// </summary>
         public DetectFrequency detectFrequency { get; set; }
+        /// <summary>
+        /// 本地缓存最大 RUM 条目数量限制 [10_000,)，默认 100_000
+        /// </summary>
+        public int rumCacheLimitCount { get; set; }
+        /// <summary>
+        /// 丢弃策略：`discard`丢弃新数据（默认）、`discardOldest`丢弃旧数据
+        /// </summary>
+        public RUMCacheDiscard rumDiscardStrategy { get; set; }
 
     }
 
@@ -113,7 +200,7 @@ namespace FTSDK.Unity.Bridge
     public class TraceConfig
     {
         /// <summary>
-        /// 采集率的值范围为>= 0、<= 1，默认值为 1
+        /// 采集率的值范围为 [0,1]，默认值为 1
         /// </summary>
         public float sampleRate { get; set; }
         /// <summary>
@@ -128,11 +215,7 @@ namespace FTSDK.Unity.Bridge
         /// <summary>
         /// 是否开启自动添加 Trace header，Android 支持 Okhttp，iOS 使用 NSURLSession
         /// </summary>
-        public bool enableAutoTrace { get; set; } = false;
-        /// <summary>
-        /// 添加 Trace 全局属性
-        /// </summary>
-        public Dictionary<string, string> globalContext { get; set; }
+        public bool enableNativeAutoTrace { get; set; } = false;
 
     }
     /// <summary>
@@ -167,6 +250,10 @@ namespace FTSDK.Unity.Bridge
         /// 添加 Log 全局属性
         /// </summary>
         public Dictionary<string, string> globalContext { get; set; }
+        /// <summary>
+        /// 本地缓存最大日志条目数量限制 [1000,)，日志越大，代表磁盘缓存压力越大，默认 5000
+        /// </summary>
+        public int logCacheLimitCount { get; set; }
     }
 
     /// <summary>
@@ -329,7 +416,18 @@ namespace FTSDK.Unity.Bridge
         Jaeger
     }
 
+    /// <summary>
+    /// 日志缓存丢弃策略
+    /// </summary>
     public enum LogCacheDiscard { Discard, DiscardOldest }
+    /// <summary>
+    /// 数据缓存丢弃策略
+    /// </summary>
+    public enum DBCacheDiscard { Discard, DiscardOldest }
+    /// <summary>
+    /// RUM 缓存丢弃策略
+    /// </summary>
+    public enum RUMCacheDiscard { Discard, DiscardOldest }
 
 
     /// <summary>
@@ -344,6 +442,9 @@ namespace FTSDK.Unity.Bridge
         Ok,
     }
 
+    /// <summary>
+    /// Enum 转化为 String
+    /// </summary>
     public class BridgeEnumConverter : StringEnumConverter
     {
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
@@ -363,21 +464,36 @@ namespace FTSDK.Unity.Bridge
         }
     }
 
+    /// <summary>
+    /// 删除字典空 value
+    /// </summary>
+    public static class DictionaryExtensions
+    {
+        public static Dictionary<TKey, TValue> WithoutNullValues<TKey, TValue>(this IDictionary<TKey, TValue> source)
+            where TValue : class
+        {
+            return source
+                .Where(kv => kv.Value != null)
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+        }
+    }
+
 
     /// <summary>
     /// Unity 桥接接口
     /// </summary>
     public class FTUnityBridge
     {
-        private const string SDK_VERSION = "1.0.0-alpha.2";
-        private const string KEY_UNITY_SDK_VERSION = "sdk_package_unity";
-
+        public const string SDK_VERSION = "1.0.1-alpha.1";
         private const string KEY_METHOD_INSTALL = "Install";
         private const string KEY_METHOD_INIT_RUM_CONFIG = "InitRUMConfig";
         private const string KEY_METHOD_INIT_LOG_CONFIG = "InitLogConfig";
         private const string KEY_METHOD_INIT_TRACE_CONFIG = "InitTraceConfig";
         private const string KEY_METHOD_BIND_USER_DATA = "BindUserData";
         private const string KEY_METHOD_UN_BIND_USER_DATA = "UnBindUserdata";
+        private const string KEY_METHOD_APPEND_GLOBAL_CONTEXT = "AppendGlobalContext";
+        private const string KEY_METHOD_APPEND_LOG_GLOBAL_CONTEXT = "AppendLogGlobalContext";
+        private const string KEY_METHOD_APPEND_RUM_GLOBAL_CONTEXT = "AppendRUMGlobalContext";
         private const string KEY_METHOD_ADD_ACTION = "AddAction";
         private const string KEY_METHOD_START_ACTION = "StartAction";
         private const string KEY_METHOD_CREATE_VIEW = "CreateView";
@@ -390,72 +506,21 @@ namespace FTSDK.Unity.Bridge
         private const string KEY_METHOD_ADD_RESOURCE = "AddResource";
         private const string KEY_METHOD_ADD_LOG = "AddLog";
         private const string KEY_METHOD_GET_TRACE_HEADER = "GetTraceHeader";
+        private const string KEY_METHOD_FLUSH_SYNC_DATA = "FlushSyncData";
+        private const string KEY_METHOD_CLEAR_ALL_DATA = "ClearAllData";
         private const string KEY_METHOD_DE_INIT = "DeInit";
+        private const string DEFAULT_ERROR_TYPE = "unity_crash";
 
         private static JsonSerializerSettings JSON_HANDLER = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore,
+            DefaultValueHandling = DefaultValueHandling.Ignore,
             Converters = { new BridgeEnumConverter() }
         };
 
-        /// IL2CPP Newtonsoft 兼容
-        class BaseBridgeData
-        {
-            public Dictionary<string, object> property;
-        }
 
-        /// IL2CPP Newtonsoft 兼容，View 数据 json 序列化
-        class ViewBridgeData : BaseBridgeData
-        {
-            public string viewName;
-            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-            public long loadTime;
-        }
 
-        /// IL2CPP Newtonsoft 兼容，Action 数据 json 序列化
-        class ActionBridgeData : BaseBridgeData
-        {
-            public string actionName;
-            public string actionType;
 
-            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-            public long duration;
-
-        }
-
-        /// IL2CPP Newtonsoft 兼容，Longtask 数据 json 序列化
-        class LongTaskBridgeData : BaseBridgeData
-        {
-            public string log;
-            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-            public long duration;
-
-        }
-
-        /// IL2CPP Newtonsoft 兼容 ，Error 数据 json 序列化
-        class ErrorBridgeData : BaseBridgeData
-        {
-            public string log;
-            public string message;
-            public string errorType;
-            public string state;
-        }
-
-        /// IL2CPP Newtonsoft 兼容，Resource  数据 json 序列化
-        class ResourceBridgeData : BaseBridgeData
-        {
-            public string resourceId;
-            public ResourceParams resourceParams;
-            public NetStatus netStatus;
-            public string url;
-        }
-
-        /// IL2CPP Newtonsoft 兼容，Log 数据 json 序列化
-        class LogBridgeData : BaseBridgeData
-        {
-            public string log;
-            public LogLevel level;
-        }
 
 #if (UNITY_IOS && !UNITY_EDITOR)
 
@@ -492,7 +557,6 @@ namespace FTSDK.Unity.Bridge
             {
                 config.globalContext = new Dictionary<string, string>();
             }
-            config.globalContext.Add(KEY_UNITY_SDK_VERSION, SDK_VERSION);
             _InovkeMethod(KEY_METHOD_INSTALL, JsonConvert.SerializeObject(config, JSON_HANDLER));
         }
 
@@ -527,9 +591,9 @@ namespace FTSDK.Unity.Bridge
         /// 绑定 RUM 用户信息
         /// </summary>
         /// <param name="userId">用户唯一id</param>
-        public static async Task BindUserData(string userId)
+        public static void BindUserData(string userId)
         {
-            await BindUserData(new UserData()
+            BindUserData(new UserData()
             {
                 userId = userId
             });
@@ -539,9 +603,9 @@ namespace FTSDK.Unity.Bridge
         /// 绑定 RUM 用户信息
         /// </summary>
         /// <param name="userData"></param>
-        public static async Task BindUserData(UserData userData)
+        public static void BindUserData(UserData userData)
         {
-            await _InovkeMethodAsync(KEY_METHOD_BIND_USER_DATA, JsonConvert.SerializeObject(userData, JSON_HANDLER));
+            _InovkeMethod(KEY_METHOD_BIND_USER_DATA, JsonConvert.SerializeObject(userData, JSON_HANDLER));
         }
 
         /// <summary>
@@ -553,6 +617,30 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
+        /// 添加自定义全局参数。作用于 RUM、Log 数据
+        /// </summary>
+        public static void AppendGlobalContext(Dictionary<string, object> property)
+        {
+            _InovkeMethod(KEY_METHOD_APPEND_GLOBAL_CONTEXT, JsonConvert.SerializeObject(property, JSON_HANDLER));
+        }
+
+        /// <summary>
+        /// 添加自定义 RUM 全局参数。作用于 RUM 数据
+        /// </summary>
+        public static void AppendRUMGlobalContext(Dictionary<string, object> property)
+        {
+            _InovkeMethod(KEY_METHOD_APPEND_RUM_GLOBAL_CONTEXT, JsonConvert.SerializeObject(property, JSON_HANDLER));
+        }
+
+        /// <summary>
+        /// 添加自定义 RUM、Log 全局参数。作用于 Log 数据
+        /// </summary>
+        public static void AppendLogGlobalContext(Dictionary<string, object> property)
+        {
+            _InovkeMethod(KEY_METHOD_APPEND_LOG_GLOBAL_CONTEXT, JsonConvert.SerializeObject(property, JSON_HANDLER));
+        }
+
+        /// <summary>
         ///  添加 Action 
         /// </summary>
         /// <param name="actionName">action 名称</param>
@@ -561,11 +649,11 @@ namespace FTSDK.Unity.Bridge
         public static void AddAction(string actionName, string actionType, long duartion)
         {
 
-            _InovkeMethod(KEY_METHOD_ADD_ACTION, JsonConvert.SerializeObject(new ActionBridgeData
+            _InovkeMethod(KEY_METHOD_ADD_ACTION, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                actionName = actionName,
-                actionType = actionType,
-                duration = duartion
+                {"actionName" , actionName},
+                {"actionType",actionType},
+                {"duration" , duartion}
             }, JSON_HANDLER));
         }
 
@@ -587,12 +675,12 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">附加属性参数</param>
         public static void StartAction(string actionName, string actionType, Dictionary<string, object> property)
         {
-            _InovkeMethod(KEY_METHOD_START_ACTION, JsonConvert.SerializeObject(new ActionBridgeData
+            _InovkeMethod(KEY_METHOD_START_ACTION, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                actionName = actionName,
-                actionType = actionType,
-                property = property
-            }, JSON_HANDLER));
+                {"actionName" , actionName},
+                {"actionType",actionType},
+                {"property" , property}
+            }.WithoutNullValues(), JSON_HANDLER));
 
         }
 
@@ -603,10 +691,10 @@ namespace FTSDK.Unity.Bridge
         /// <param name="loadTime">加载时间，纳秒</param>
         public static void CreateView(string viewName, long loadTime)
         {
-            _InovkeMethod(KEY_METHOD_CREATE_VIEW, JsonConvert.SerializeObject(new ViewBridgeData
+            _InovkeMethod(KEY_METHOD_CREATE_VIEW, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                viewName = viewName,
-                loadTime = loadTime,
+                {"viewName" , viewName },
+                {"loadTime" , loadTime },
             }, JSON_HANDLER));
         }
 
@@ -626,11 +714,11 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">附加属性参数</param>
         public static void StartView(string viewName, Dictionary<string, object> property)
         {
-            _InovkeMethod(KEY_METHOD_START_VIEW, JsonConvert.SerializeObject(new ViewBridgeData()
+            _InovkeMethod(KEY_METHOD_START_VIEW, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                viewName = viewName,
-                property = property
-            }, JSON_HANDLER));
+                {"viewName" , viewName },
+                {"property" , property },
+            }.WithoutNullValues(), JSON_HANDLER));
         }
 
         /// <summary>
@@ -647,10 +735,10 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">附加属性参数</param>
         public static void StopView(Dictionary<string, object> property)
         {
-            _InovkeMethod(KEY_METHOD_STOP_VIEW, JsonConvert.SerializeObject(new ViewBridgeData
+            _InovkeMethod(KEY_METHOD_STOP_VIEW, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                property = property,
-            }, JSON_HANDLER));
+               {"property" , property },
+            }.WithoutNullValues(), JSON_HANDLER));
         }
 
         /// <summary>
@@ -661,7 +749,7 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task AddError(string log, string message, Dictionary<string, object> property)
         {
-            await AddError(log, message, "native_crash", property);
+            await AddError(log, message, DEFAULT_ERROR_TYPE, property);
         }
 
 
@@ -673,7 +761,7 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task AddError(string log, string message)
         {
-            await AddError(log, message, "native_crash", null);
+            await AddError(log, message, DEFAULT_ERROR_TYPE, null);
         }
 
 
@@ -701,13 +789,13 @@ namespace FTSDK.Unity.Bridge
             Dictionary<string, object> property)
         {
             string state = "run";
-            await _InovkeMethodAsync(KEY_METHOD_ADD_ERROR, JsonConvert.SerializeObject(new ErrorBridgeData
+            await _InovkeMethodAsync(KEY_METHOD_ADD_ERROR, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                log = log,
-                message = message,
-                errorType = errorType,
-                state = state,
-                property = property
+                {"log", log },
+                {"message" , message },
+                {"errorType" , errorType },
+                {"state" , state },
+                {"property" , property }
             }, JSON_HANDLER));
         }
 
@@ -732,12 +820,12 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task AddLongTask(string log, long duration, Dictionary<string, object> property)
         {
-            await _InovkeMethodAsync(KEY_METHOD_ADD_LONG_TASK, JsonConvert.SerializeObject(new LongTaskBridgeData
+            await _InovkeMethodAsync(KEY_METHOD_ADD_LONG_TASK, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                log = log,
-                duration = duration,
-                property = property
-            }, JSON_HANDLER));
+                {"log" , log },
+                {"duration" , duration},
+                {"property" , property}
+            }.WithoutNullValues(), JSON_HANDLER));
 
         }
 
@@ -759,11 +847,11 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task StartResource(string resourceId, Dictionary<string, object> property)
         {
-            await _InovkeMethodAsync(KEY_METHOD_START_RESOURCE, JsonConvert.SerializeObject(new ResourceBridgeData
+            await _InovkeMethodAsync(KEY_METHOD_START_RESOURCE, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                resourceId = resourceId,
-                property = property
-            },JSON_HANDLER));
+                {"resourceId" , resourceId},
+                {"property" , property},
+            }.WithoutNullValues(), JSON_HANDLER));
         }
 
         /// <summary>
@@ -783,11 +871,11 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">附加属性参数</param>
         public static async Task StopResource(string resourceId, Dictionary<string, object> property)
         {
-            await _InovkeMethodAsync(KEY_METHOD_STOP_RESOURCE, JsonConvert.SerializeObject(new ResourceBridgeData
+            await _InovkeMethodAsync(KEY_METHOD_STOP_RESOURCE, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                resourceId = resourceId,
-                property = property
-            }, JSON_HANDLER));
+                {"resourceId" , resourceId},
+                {"property" , property},
+            }.WithoutNullValues(), JSON_HANDLER));
         }
 
         /// <summary>
@@ -798,12 +886,12 @@ namespace FTSDK.Unity.Bridge
         /// <param name="netStatus">网络指标数据</param>
         public static async Task AddResource(string resourceId, ResourceParams resourceParams, NetStatus netStatus)
         {
-            await _InovkeMethodAsync(KEY_METHOD_ADD_RESOURCE, JsonConvert.SerializeObject(new ResourceBridgeData
+            await _InovkeMethodAsync(KEY_METHOD_ADD_RESOURCE, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                resourceId = resourceId,
-                resourceParams = resourceParams,
-                netStatus = netStatus
-            },JSON_HANDLER));
+                {"resourceId" , resourceId},
+                {"resourceParams" , resourceParams},
+                {"netStatus" , netStatus},
+            }.WithoutNullValues(), JSON_HANDLER));
 
         }
         /// <summary>
@@ -826,12 +914,12 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task AddLog(string log, LogLevel level, Dictionary<string, object> property)
         {
-            await _InovkeMethodAsync(KEY_METHOD_ADD_LOG, JsonConvert.SerializeObject(new LogBridgeData
+            await _InovkeMethodAsync(KEY_METHOD_ADD_LOG, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                log = log,
-                level = level,
-                property = property
-            }, JSON_HANDLER));
+                {"log" , log},
+                {"level" , level},
+                {"property" , property},
+            }.WithoutNullValues(), JSON_HANDLER));
         }
         /// <summary>
         /// 获取链路
@@ -842,10 +930,10 @@ namespace FTSDK.Unity.Bridge
 
         public static async Task<string> GetTraceHeader(string resourceId, string url)
         {
-            return await _InovkeMethodAsync(KEY_METHOD_GET_TRACE_HEADER, JsonConvert.SerializeObject(new ResourceBridgeData
+            return await _InovkeMethodAsync(KEY_METHOD_GET_TRACE_HEADER, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                resourceId = resourceId,
-                url = url,
+                {"resourceId" , resourceId},
+                {"url" , url},
             }, JSON_HANDLER));
         }
 
@@ -858,6 +946,24 @@ namespace FTSDK.Unity.Bridge
         {
             return await GetTraceHeader(null, url);
         }
+
+
+        /// <summary>
+        /// 主动同步数据
+        /// </summary>
+        public static async void flushSyncData()
+        {
+            await _InovkeMethodAsync(KEY_METHOD_FLUSH_SYNC_DATA, "");
+        }
+
+        /// <summary>
+        /// 清理未上报的缓存数据
+        /// </summary>
+        public static async void cleanAllData()
+        {
+            await _InovkeMethodAsync(KEY_METHOD_CLEAR_ALL_DATA, "");
+        }
+
 
         /// <summary>
         /// SDK 释放
@@ -896,7 +1002,7 @@ namespace FTSDK.Unity.Bridge
         private static string _InovkeMethod(string method, string json)
         {
 
-            //UnityEngine.Debug.Log(json);
+            UnityEngine.Debug.Log(json);
 
 #if (UNITY_IOS && !UNITY_EDITOR)
         IntPtr ptr = invokeMethod(method,json);
@@ -918,5 +1024,3 @@ namespace FTSDK.Unity.Bridge
         }
     }
 }
-
-

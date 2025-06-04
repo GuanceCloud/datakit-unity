@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import <FTMobileSDK/FTMobileAgent.h>
+#import <FTMobileSDK/FTMobileConfig+Private.h>
 
 /// c 字符串 转换 oc 字符串
 /// - Parameter string: c 字符串
@@ -61,29 +62,112 @@ extern "C"{
 /// debug: 是否开启 Debug 模式
 /// globalContext: 自定义全局参数
 void install(const char* json){
-    NSDictionary *configDict = JsonStringToDict(json);
-    if(configDict == nil){
+    NSDictionary *params = JsonStringToDict(json);
+    if(params == nil){
         return;
     }
-    NSString *datakitUrl = [configDict objectForKey:@"datakitUrl"];
-    NSString *dataWayUrl = [configDict objectForKey:@"datawayUrl"];
-    NSString *cliToken = [configDict objectForKey:@"cliToken"];
-    NSString *envType = [configDict objectForKey:@"env"];
-    NSString *serviceName = [configDict objectForKey:@"serviceName"];
-    NSNumber *debug = [configDict objectForKey:@"debug"];
-    NSDictionary *globalContext = [configDict objectForKey:@"globalContext"];
-    
+    NSString *serverUrl = [params valueForKey:@"serverUrl"];
+    NSString *datakitUrl = [params valueForKey:@"datakitUrl"];
+    datakitUrl = datakitUrl ?:serverUrl;
+    NSString *dataWayUrl = [params valueForKey:@"datawayUrl"];
+    NSString *clientToken = [params valueForKey:@"clientToken"];
     FTMobileConfig *config;
     if(dataWayUrl && dataWayUrl.length>0 && clientToken && clientToken.length>0){
         config = [[FTMobileConfig alloc]initWithDatawayUrl:dataWayUrl clientToken:clientToken];
-    }else(datakitUrl && datakitUrl.length>0){
+    }else if(datakitUrl && datakitUrl.length>0){
         config = [[FTMobileConfig alloc]initWithDatakitUrl:datakitUrl];
+    }else{
+        return;
     }
-    
-    config.env = envType;
-    config.service = serviceName;
-    config.enableSDKDebugLog = [debug boolValue];
+    if([params.allKeys containsObject:@"debug"]){
+        NSNumber *debug = params[@"debug"];
+        config.enableSDKDebugLog = [debug boolValue];
+    }
+    if ([params.allKeys containsObject:@"serviceName"]) {
+        config.service = params[@"serviceName"];
+    }
+    if([params.allKeys containsObject:@"env"]){
+        id env = params[@"env"];
+        if([env isKindOfClass:NSString.class]){
+            config.env = env;
+        }
+    }
+    if ([params.allKeys containsObject:@"autoSync"]) {
+        config.autoSync = [params[@"autoSync"] boolValue];
+    }
+    if ([params.allKeys containsObject:@"syncPageSize"]) {
+        config.syncPageSize = [params[@"syncPageSize"] intValue];
+    }
+    if ([params.allKeys containsObject:@"syncSleepTime"]) {
+        config.syncSleepTime = [params[@"syncSleepTime"] intValue];
+    }
+    if ([params.allKeys containsObject:@"enableDataIntegerCompatible"]) {
+        config.enableDataIntegerCompatible = [params[@"enableDataIntegerCompatible"] boolValue];
+    }
+    if ([params.allKeys containsObject:@"compressIntakeRequests"]) {
+        config.compressIntakeRequests = [params[@"compressIntakeRequests"] boolValue];
+    }
+    if ([params.allKeys containsObject:@"dbDiscardStrategy"]){
+        NSString *type = params[@"dbDiscardStrategy"];
+        if([type isEqualToString:@"discard"]){
+            config.dbDiscardType = FTDBDiscard;
+        }else if([type isEqualToString:@"discardOldest"]){
+            config.dbDiscardType = FTDBDiscardOldest;
+        }
+    }
+    if ([params.allKeys containsObject:@"enableLimitWithDbSize"]){
+        config.enableLimitWithDbSize = [params[@"enableLimitWithDbSize"] boolValue];
+    }
+    if ([params.allKeys containsObject:@"dbCacheLimit"]){
+        config.dbCacheLimit = [params[@"dbCacheLimit"] doubleValue];
+    }
+    NSMutableDictionary *globalContext = [[NSMutableDictionary alloc]init];
+    if ([params.allKeys containsObject:@"globalContext"]) {
+        NSDictionary *context = [params valueForKey:@"globalContext"];
+        if(context.allKeys.count>0){
+            [globalContext addEntriesFromDictionary:context];
+        }
+    }
     config.globalContext = globalContext;
+
+    NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
+    if ([params.allKeys containsObject:@"dataModifier"]) {
+        NSDictionary *context = [params valueForKey:@"dataModifier"];
+        if(context.allKeys.count>0){
+            [dataModifierDict addEntriesFromDictionary:context];
+        }
+        config.dataModifier = ^id _Nullable(NSString * _Nonnull key, id  _Nonnull value) {
+        if ([dataModifierDict.allKeys containsObject:key]) {
+          return dataModifierDict[key];
+        }
+        return value;
+    };
+    }
+
+
+    NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
+    if ([params.allKeys containsObject:@"lineDataModifier"]) {
+        NSDictionary *context = [params valueForKey:@"lineDataModifier"];
+        if(context.allKeys.count>0){
+            [dataModifierDict addEntriesFromDictionary:context];
+        }
+
+        config.lineDataModifier = ^NSDictionary<NSString *,id> * _Nullable(NSString * _Nonnull measurement, NSDictionary<NSString *,id> * _Nonnull data) {
+        if ([measurement isEqualToString:FT_LOGGER_SOURCE] || [measurement isEqualToString:FT_LOGGER_TVOS_SOURCE]) {
+          return [dataModifierDict valueForKey:@"log"];
+        }else{
+          return [dataModifierDict valueForKey:measurement];
+        }
+    };
+    }
+
+    if ([params.allKeys containsObject:@"serviceName"]) {
+        config.service = params[@"serviceName"];
+    }
+
+    if ([params.allKeys containsObject:@"sdkVersion"]) {
+        [config addPkgInfo:@"unity" value: params[@"sdkVersion"]];
+    }
     [FTMobileAgent startWithConfigOptions:config];
 }
 /// SDK 关闭
@@ -114,11 +198,44 @@ void unbindUserdata(){
     [[FTMobileAgent sharedInstance] unbindUser];
 }
 
+void appendGlobalContext(const char* json){
+    NSDictionary *context = JsonStringToDict(json);
+    if(context == nil){
+        return;
+    }
+    [FTMobileAgent appendGlobalContext:context];
+}
+
+void appendRUMGlobalContext(const char* json){
+    NSDictionary *context = JsonStringToDict(json);
+    if(context == nil){
+        return;
+    }
+    [FTMobileAgent appendRUMGlobalContext:context];
+}
+
+void appendLogGlobalContext(const char* json){
+    NSDictionary *context = JsonStringToDict(json);
+    if(context == nil){
+        return;
+    }
+    [FTMobileAgent appendLogGlobalContext:context];
+}
+
+void flushSyncData(){
+    [[FTMobileAgent sharedInstance] flushSyncData];
+}
+
+void clearAllData(){
+    [FTMobileAgent clearAllData];
+}
+
 #pragma mark ========== RUM ==========
 /// 初始化 RUM 配置
 /// - Parameter rumConfigJson: 配置项
 /// iOSAppId：appId
 /// sampleRate：采样率
+/// sessionOnErrorSampleRate
 /// enableNativeUserResource：是否进行 `Native Resource` 自动追踪
 /// enableNativeUserAction：是否进行 `Native Action` 追踪，包括冷热启动
 /// enableNativeUserView：是否进行 `Native View` 自动追踪
@@ -127,42 +244,126 @@ void unbindUserdata(){
 /// detectFrequency: 页面监控频率
 /// globalContext: 自定义 RUM 全局参数
 void initRUMConfig(const char* rumConfigJson){
-    NSDictionary *configDict = JsonStringToDict(rumConfigJson);
-    if(configDict == nil){
+    NSDictionary *params = JsonStringToDict(rumConfigJson);
+    if(params == nil){
         return;
     }
-    NSString *rumAppId = [configDict objectForKey:@"iOSAppId"];
-    NSNumber *sampleRate = [configDict objectForKey:@"sampleRate"];
-    NSNumber *enableTraceUserResource = [configDict objectForKey:@"enableNativeUserResource"];
-    NSNumber *enableTraceUserAction = [configDict objectForKey:@"enableNativeUserAction"];
-    NSNumber *enableNativeUserView = [configDict objectForKey:@"enableNativeUserView"];
-    NSNumber *extraMonitorTypeWithError = [configDict objectForKey:@"extraMonitorTypeWithError"];
-    NSNumber *deviceMonitorType = [configDict objectForKey:@"deviceMonitorType"];
-    NSString *detectFrequency = [configDict objectForKey:@"detectFrequency"];
-    NSDictionary *globalContext = [configDict objectForKey:@"globalContext"];
+   NSString *rumAppId = [params objectForKey:@"iOSAppId"];
     FTRumConfig *rumConfig = [[FTRumConfig alloc]initWithAppid:rumAppId];
-    if(sampleRate){
-        rumConfig.samplerate = [sampleRate floatValue] * 100;
+    if ([params.allKeys containsObject:@"sampleRate"]) {
+        rumConfig.samplerate = [params[@"sampleRate"] doubleValue] * 100;
     }
-    if(extraMonitorTypeWithError){
-        rumConfig.errorMonitorType = (FTErrorMonitorType)[extraMonitorTypeWithError intValue];
+     if ([context.allKeys containsObject:@"sessionOnErrorSampleRate"]) {
+        rumConfig.sessionOnErrorSampleRate  = [params[@"sessionOnErrorSampleRate"] doubleValue] * 100;
+     }
+    if ([params.allKeys containsObject:@"enableNativeUserAction"]) {
+        rumConfig.enableTraceUserAction = params[@"enableNativeUserAction"];
     }
-    if(deviceMonitorType){
-        rumConfig.deviceMetricsMonitorType = (FTDeviceMetricsMonitorType)[deviceMonitorType intValue];
+    if ([params.allKeys containsObject:@"enableNativeUserView"]) {
+        rumConfig.enableTraceUserView = params[@"enableNativeUserView"];
     }
-    if(detectFrequency){
-        if ([detectFrequency isEqualToString:@"normal"]) {
+    if ([params.allKeys containsObject:@"enableNativeUserResource"]) {
+        rumConfig.enableTraceUserResource = params[@"enableNativeUserResource"];
+    }
+    if ([params.allKeys containsObject:@"extraMonitorTypeWithError"]) {
+        id type = params[@"extraMonitorTypeWithError"];
+        if([type isKindOfClass:NSString.class]){
+            //all, battery, memory, cpu
+            if([type isEqualToString:@"all"]){
+                rumConfig.errorMonitorType = FTErrorMonitorAll;
+            }else if ([type isEqualToString:@"memory"]){
+                rumConfig.errorMonitorType = FTErrorMonitorMemory;
+            }else if ([type isEqualToString:@"cpu"]){
+                rumConfig.errorMonitorType = FTErrorMonitorCpu;
+            }else if ([type isEqualToString:@"battery"]){
+                rumConfig.errorMonitorType = FTErrorMonitorBattery;
+            }
+        }else if ([type isKindOfClass:NSArray.class]){
+            NSArray *typeAry = type;
+            NSEnumerator *enumerator =typeAry.objectEnumerator;
+            NSString *typeStr;
+            while ((typeStr = enumerator.nextObject) != nil) {
+                if([typeStr isEqualToString:@"all"]){
+                    rumConfig.errorMonitorType = FTErrorMonitorAll;
+                    break;
+                }else if ([typeStr isEqualToString:@"memory"]){
+                    rumConfig.errorMonitorType = rumConfig.errorMonitorType|FTErrorMonitorMemory;
+                }else if ([typeStr isEqualToString:@"cpu"]){
+                    rumConfig.errorMonitorType = rumConfig.errorMonitorType|FTErrorMonitorCpu;
+                }else if ([typeStr isEqualToString:@"battery"]){
+                    rumConfig.errorMonitorType = rumConfig.errorMonitorType|FTErrorMonitorBattery;
+                }
+            }
+        }
+    }
+    if ([params.allKeys containsObject:@"deviceMonitorType"]){
+        id type = params[@"deviceMonitorType"];
+        //all, memory, cpu, fps
+        if ([type isKindOfClass:NSString.class]){
+            if([type isEqualToString:@"all"]){
+                rumConfig.deviceMetricsMonitorType = FTDeviceMetricsMonitorAll;
+            }else if ([type isEqualToString:@"memory"]){
+                rumConfig.deviceMetricsMonitorType = FTDeviceMetricsMonitorMemory;
+            }else if ([type isEqualToString:@"cpu"]){
+                rumConfig.deviceMetricsMonitorType = FTDeviceMetricsMonitorCpu;
+            }else if ([type isEqualToString:@"fps"]){
+                rumConfig.deviceMetricsMonitorType = FTDeviceMetricsMonitorFps;
+            }
+        }else if([type isKindOfClass:NSArray.class]){
+            NSArray *typeAry = type;
+            NSEnumerator *enumerator = typeAry.objectEnumerator;
+            NSString *typeStr;
+            while ((typeStr = enumerator.nextObject)!=nil) {
+                if([typeStr isEqualToString:@"all"]){
+                    rumConfig.deviceMetricsMonitorType = FTDeviceMetricsMonitorAll;
+                    break;
+                }else if ([typeStr isEqualToString:@"memory"]){
+                    rumConfig.deviceMetricsMonitorType = rumConfig.deviceMetricsMonitorType|FTDeviceMetricsMonitorMemory;
+                }else if ([typeStr isEqualToString:@"cpu"]){
+                    rumConfig.deviceMetricsMonitorType = rumConfig.deviceMetricsMonitorType|FTDeviceMetricsMonitorCpu;
+                }else if ([typeStr isEqualToString:@"fps"]){
+                    rumConfig.deviceMetricsMonitorType = rumConfig.deviceMetricsMonitorType|FTDeviceMetricsMonitorFps;
+                }
+            }
+        }
+    }
+    if([params.allKeys containsObject:@"detectFrequency"]){
+        //normal, frequent, rare
+        NSString *type = params[@"detectFrequency"];
+        if([type isEqualToString:@"normal"]){
             rumConfig.monitorFrequency = FTMonitorFrequencyDefault;
-        }else if ([detectFrequency isEqualToString:@"frequent"]){
+        }else if ([type isEqualToString:@"frequent"]){
             rumConfig.monitorFrequency = FTMonitorFrequencyFrequent;
-        }else if ([detectFrequency isEqualToString:@"rare"]){
+        }else if ([type isEqualToString:@"rare"]){
             rumConfig.monitorFrequency = FTMonitorFrequencyRare;
         }
     }
-    rumConfig.enableTraceUserResource = [enableTraceUserResource boolValue];
-    rumConfig.enableTraceUserAction = [enableTraceUserAction boolValue];
-    rumConfig.enableTraceUserView = [enableNativeUserView boolValue];
-    rumConfig.globalContext = globalContext;
+    if ([params.allKeys containsObject:@"enableResourceHostIP"]) {
+        rumConfig.enableResourceHostIP = [params[@"enableResourceHostIP"] boolValue];
+    }
+    if ([params.allKeys containsObject:@"enableTrackNativeCrash"]){
+      rumConfig.enableTrackAppCrash = [params[@"enableTrackNativeCrash"] boolValue];
+    }
+    if ([params.allKeys containsObject:@"enableTrackNativeFreeze"]){
+      rumConfig.enableTrackAppFreeze = [params[@"enableTrackNativeFreeze"] boolValue];
+    }
+    if ([params.allKeys containsObject:@"nativeFreezeDurationMs"]){
+        rumConfig.freezeDurationMs = [params[@"nativeFreezeDurationMs"] doubleValue];
+    }
+    if ([params.allKeys containsObject:@"rumDiscardStrategy"]) {
+        NSString *type = params[@"rumDiscardStrategy"];
+        if([type isEqualToString:@"discard"]){
+            rumConfig.rumDiscardType = FTRUMDiscard;
+        }else if ([type isEqualToString:@"discardOldest"]){
+            rumConfig.rumDiscardType = FTRUMDiscardOldest;
+        }
+    }
+    if ([params.allKeys containsObject:@"rumCacheLimitCount"]) {
+        rumConfig.rumCacheLimitCount = [params[@"rumCacheLimitCount"] intValue];
+    }
+    if ([params.allKeys containsObject:@"globalContext"]) {
+        rumConfig.globalContext = params[@"globalContext"];
+    }
     [[FTMobileAgent sharedInstance] startRumWithConfigOptions:rumConfig];
 }
 /// 添加 Action 事件
@@ -378,48 +579,59 @@ void addLongTask(const char* json){
 /// discardStrategy：日志丢弃策略
 /// globalContext：自定义日志全局参数
 void initLogConfig(const char* logConfigJson){
-    NSDictionary *configDict = JsonStringToDict(logConfigJson);
-    if(configDict == nil){
+    NSDictionary *params = JsonStringToDict(logConfigJson);
+    if(params == nil){
         return;
     }
-    BOOL enableCustomLog = [[configDict objectForKey:@"enableCustomLog"] boolValue];
-    BOOL enableLinkRumData = [[configDict objectForKey:@"enableLinkRumData"] boolValue];
-    NSNumber *sampleRate = [configDict objectForKey:@"sampleRate"];
-    NSArray *logLevelFilters = [configDict objectForKey:@"logLevelFilters"];
-    NSString *discardStrategy = [configDict objectForKey:@"discardStrategy"];
-    NSDictionary *globalContext = [configDict objectForKey:@"globalContext"];
-    FTLoggerConfig *loggerConfig = [[FTLoggerConfig alloc]init];
-    if(sampleRate){
-        loggerConfig.samplerate = [sampleRate floatValue] * 100;
+    FTLoggerConfig *config = [[FTLoggerConfig alloc]init];
+    if ([params.allKeys containsObject:@"sampleRate"]) {
+        config.samplerate =[params[@"sampleRate"] doubleValue] * 100;
     }
-    if(discardStrategy){
-        if([discardStrategy isEqualToString:@"discard"]){
-            loggerConfig.discardType = FTDiscard;
-        }else if ([discardStrategy isEqualToString:@"discardOldest"]){
-            loggerConfig.discardType = FTDiscardOldest;
+    if ([params.allKeys containsObject:@"enableLinkRumData"]) {
+        config.enableLinkRumData = params[@"enableLinkRumData"];
+    }
+    if ([params.allKeys containsObject:@"enableCustomLog"]) {
+        config.enableCustomLog = params[@"enableCustomLog"];
+    }
+    if ([params.allKeys containsObject:@"discardStrategy"]) {
+        NSString *type = params[@"discardStrategy"];
+        //`discard`丢弃新数据（默认）、`discardOldest`
+        if([type isEqualToString:@"discardOldest"]){
+            config.discardType = FTDiscardOldest;
+        }else{
+            config.discardType = FTDiscard;
         }
     }
-    if(logLevelFilters&&logLevelFilters.count>0){
-        NSMutableArray *logLevels = [NSMutableArray new];
-        for (NSString *level in logLevelFilters) {
-            if([level isEqualToString:@"info"]){
-                [logLevels addObject:@(FTStatusInfo)];
-            }else if ([level isEqualToString:@"warning"]){
-                [logLevels addObject:@(FTStatusWarning)];
-            }else if ([level isEqualToString:@"error"]){
-                [logLevels addObject:@(FTStatusError)];
-            }else if ([level isEqualToString:@"critical"]){
-                [logLevels addObject:@(FTStatusCritical)];
-            }else if ([level isEqualToString:@"ok"]){
-                [logLevels addObject:@(FTStatusOk)];
+    if ([params.allKeys containsObject:@"logLevelFilters"]) {
+        NSArray *filters = params[@"logLevelFilters"];
+        if(filters.count>0){
+            NSEnumerator *enumerator = filters.objectEnumerator;
+            NSString *level;
+            NSMutableArray *logLevelFilters = [NSMutableArray new];
+            while ((level = enumerator.nextObject)) {
+                //`info`提示、`warning`警告、`error`错误、`critical`、`ok`恢复
+                if([level isEqualToString:@"info"]){
+                    [logLevelFilters addObject:@(FTStatusInfo)];
+                }else if([level isEqualToString:@"warning"]){
+                    [logLevelFilters addObject:@(FTStatusWarning)];
+                }else if([level isEqualToString:@"error"]){
+                    [logLevelFilters addObject:@(FTStatusError)];
+                }else if([level isEqualToString:@"critical"]){
+                    [logLevelFilters addObject:@(FTStatusCritical)];
+                }else if([level isEqualToString:@"ok"]){
+                    [logLevelFilters addObject:@(FTStatusOk)];
+                }
             }
+            config.logLevelFilter =  logLevelFilters;
         }
-        loggerConfig.logLevelFilter = logLevels;
     }
-    loggerConfig.enableCustomLog = enableCustomLog;
-    loggerConfig.enableLinkRumData = enableLinkRumData;
-    loggerConfig.globalContext = globalContext;
-    [[FTMobileAgent sharedInstance] startLoggerWithConfigOptions:loggerConfig];
+    if ([params.allKeys containsObject:@"logCacheLimitCount"]) {
+        config.logCacheLimitCount = [params[@"logCacheLimitCount"] intValue];
+    }
+    if([params.allKeys containsObject:@"globalContext"]){
+        config.globalContext = [params objectForKey:@"globalContext"];
+    }
+    [[FTMobileAgent sharedInstance] startLoggerWithConfigOptions:config];
 }
 
 /// 日志打印
@@ -458,36 +670,34 @@ void addLog(const char* json){
 /// enableLinkRUMData：是否与 `RUM` 数据关联
 /// enableAutoTrace：是否开启原生网络自动追踪
 void initTraceConfig(const char* traceConfigJson){
-    NSDictionary *configDict = JsonStringToDict(traceConfigJson);
-    if(configDict == nil){
+    NSDictionary *params = JsonStringToDict(traceConfigJson);
+    if(params == nil){
         return;
     }
-    NSString *traceType = [configDict objectForKey:@"traceType"];
-    BOOL enableLinkRumData = [[configDict objectForKey:@"enableLinkRumData"] boolValue];
-    NSNumber *sampleRate = [configDict objectForKey:@"sampleRate"];
-    NSNumber *enableAutoTrace = [configDict objectForKey:@"enableAutoTrace"];
-    FTTraceConfig *tracrConfig = [[FTTraceConfig alloc]init];
-    if(traceType!=nil && traceType.length>0){
-        if([traceType isEqualToString:@"ddtrace"]){
-            tracrConfig.networkTraceType = FTNetworkTraceTypeDDtrace;
-        }else if ([traceType isEqualToString:@"zipkinMulti"]){
-            tracrConfig.networkTraceType = FTNetworkTraceTypeZipkinMultiHeader;
-        }else if ([traceType isEqualToString:@"zipkinSingle"]){
-            tracrConfig.networkTraceType = FTNetworkTraceTypeZipkinSingleHeader;
-        }else if ([traceType isEqualToString:@"jaeger"]){
-            tracrConfig.networkTraceType = FTNetworkTraceTypeJaeger;
-        }else if ([traceType isEqualToString:@"skywalking"]){
-            tracrConfig.networkTraceType = FTNetworkTraceTypeSkywalking;
-        }else if ([traceType isEqualToString:@"traceParent"]){
-            tracrConfig.networkTraceType = FTNetworkTraceTypeTraceparent;
+   FTTraceConfig *trace = [[FTTraceConfig alloc]init];
+    if ([params.allKeys containsObject:@"sampleRate"]) {
+        trace.samplerate =[params[@"sampleRate"] doubleValue] * 100;
+    }
+    if ([params.allKeys containsObject:@"traceType"]) {
+        NSString *type =  params[@"traceType"];
+        //`ddTrace`（默认）、`zipkinMultiHeader`、`zipkinSingleHeader`、`traceparent`、`skywalking`、`jaeger`
+        if([type isEqualToString:@"ddTrace"]){
+            trace.networkTraceType = FTNetworkTraceTypeDDtrace;
+        }else if ([type isEqualToString:@"zipkinMultiHeader"]){
+            trace.networkTraceType = FTNetworkTraceTypeZipkinMultiHeader;
+        }else if ([type isEqualToString:@"zipkinSingleHeader"]){
+            trace.networkTraceType = FTNetworkTraceTypeZipkinSingleHeader;
+        }else if ([type isEqualToString:@"traceparent"]){
+            trace.networkTraceType = FTNetworkTraceTypeTraceparent;
+        }else if ([type isEqualToString:@"skywalking"]){
+            trace.networkTraceType = FTNetworkTraceTypeSkywalking;
+        }else if ([type isEqualToString:@"jaeger"]){
+            trace.networkTraceType = FTNetworkTraceTypeJaeger;
         }
     }
-    if(sampleRate){
-        tracrConfig.samplerate = [sampleRate floatValue] * 100;
-    }
-    tracrConfig.enableAutoTrace = [enableAutoTrace boolValue];
-    tracrConfig.enableLinkRumData = enableLinkRumData;
-    [[FTMobileAgent sharedInstance] startTraceWithConfigOptions:tracrConfig];
+    trace.enableLinkRumData = [params objectForKey:@"enableLinkRUMData"];
+    trace.enableAutoTrace = [params objectForKey:@"enableNativeAutoTrace"];
+    [[FTMobileAgent sharedInstance] startTraceWithConfigOptions:trace];
 }
 /// 获取 trace 需要添加的请求头
 /// - Parameter json: 参数
@@ -550,6 +760,16 @@ const char* invokeMethod(const char* method,const char* json){
         initTraceConfig(json);
     }else if ([methodStr isEqualToString:@"GetTraceHeader"]){
         return getTraceHeader(json);
+    }else if ([methodStr isEqualToString:@"AppendGlobalContext"]){
+         appendGlobalContext(json);
+    }else if ([methodStr isEqualToString:@"AppendLogGlobalContext"]){
+         appendLogGlobalContext(json);
+    }else if ([methodStr isEqualToString:@"AppendRUMGlobalContext"]){
+         appendRUMGlobalContext(json);
+    }else if ([methodStr isEqualToString:@"FlushSyncData"]){
+        flushSyncData();
+    }else if ([methodStr isEqualToString:@"ClearAllData"]){
+        clearAllData();
     }
     return nil;
 }

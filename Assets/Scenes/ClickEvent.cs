@@ -81,7 +81,7 @@ public class ClickEvent : MonoBehaviour
                     resourceParams.url = url;
                     resourceParams.requestHeader = client.DefaultRequestHeaders.ToDictionary(header => header.Key, header => string.Join(",", header.Value));
                     resourceParams.responseHeader = response.Headers.ToDictionary(header => header.Key, header => string.Join(",", header.Value));
-                    
+
                     resourceParams.resourceStatus = (int)response.StatusCode;
                     resourceParams.responseBody = responseData;
                     resourceParams.resourceMethod = "GET";
@@ -96,6 +96,22 @@ public class ClickEvent : MonoBehaviour
                     Debug.Log($"Network request failed: {e.Message}");
                 }
             }
+        });
+    }
+
+    public void DynamicGlobalContext()
+    {
+        FTUnityBridge.AppendGlobalContext(new Dictionary<string, object>()
+        {
+            {"ft_global_key","ft_global_value" },
+        }
+        );
+        FTUnityBridge.AppendRUMGlobalContext(new Dictionary<string, object>(){
+            { "ft_global_rum_key", "ft_global_rum_value" },
+        });
+        FTUnityBridge.AppendLogGlobalContext(new Dictionary<string, object>()
+        {
+            { "ft_global_log_key", "ft_global_log_value" },
         });
     }
 
