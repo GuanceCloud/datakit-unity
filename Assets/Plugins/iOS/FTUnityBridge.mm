@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 #import <FTMobileSDK/FTMobileAgent.h>
 #import <FTMobileSDK/FTMobileConfig+Private.h>
+#import <FTMobileSDK/FTConstants.h>
 
 /// c 字符串 转换 oc 字符串
 /// - Parameter string: c 字符串
@@ -121,46 +122,30 @@ void install(const char* json){
     if ([params.allKeys containsObject:@"dbCacheLimit"]){
         config.dbCacheLimit = [params[@"dbCacheLimit"] doubleValue];
     }
-    NSMutableDictionary *globalContext = [[NSMutableDictionary alloc]init];
     if ([params.allKeys containsObject:@"globalContext"]) {
-        NSDictionary *context = [params valueForKey:@"globalContext"];
-        if(context.allKeys.count>0){
-            [globalContext addEntriesFromDictionary:context];
-        }
+        NSDictionary *globalContext = [params valueForKey:@"globalContext"];
+        config.globalContext = globalContext;
     }
-    config.globalContext = globalContext;
-
-  
+    
     if ([params.allKeys containsObject:@"dataModifier"]) {
-        NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
-        NSDictionary *context = [params valueForKey:@"dataModifier"];
-        if(context.allKeys.count>0){
-            [dataModifierDict addEntriesFromDictionary:context];
-        }
+        NSDictionary *dataModifierDict = [params valueForKey:@"dataModifier"];
         config.dataModifier = ^id _Nullable(NSString * _Nonnull key, id  _Nonnull value) {
-        if ([dataModifierDict.allKeys containsObject:key]) {
-          return dataModifierDict[key];
-        }
-        return value;
-    };
+            if ([dataModifierDict.allKeys containsObject:key]) {
+                return dataModifierDict[key];
+            }
+            return value;
+        };
     }
-
-
-
+    
     if ([params.allKeys containsObject:@"lineDataModifier"]) {
-        NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
-        NSDictionary *context = [params valueForKey:@"lineDataModifier"];
-        if(context.allKeys.count>0){
-            [dataModifierDict addEntriesFromDictionary:context];
-        }
-
+        NSDictionary *lineDataModifierDict = [params valueForKey:@"lineDataModifier"];
         config.lineDataModifier = ^NSDictionary<NSString *,id> * _Nullable(NSString * _Nonnull measurement, NSDictionary<NSString *,id> * _Nonnull data) {
-        if ([measurement isEqualToString:FT_LOGGER_SOURCE] || [measurement isEqualToString:FT_LOGGER_TVOS_SOURCE]) {
-          return [dataModifierDict valueForKey:@"log"];
-        }else{
-          return [dataModifierDict valueForKey:measurement];
-        }
-    };
+            if ([measurement isEqualToString:FT_LOGGER_SOURCE] || [measurement isEqualToString:FT_LOGGER_TVOS_SOURCE]) {
+                return [lineDataModifierDict valueForKey:@"log"];
+            }else{
+                return [lineDataModifierDict valueForKey:measurement];
+            }
+        };
     }
 
     if ([params.allKeys containsObject:@"serviceName"]) {
@@ -174,7 +159,7 @@ void install(const char* json){
 }
 /// SDK 关闭
 void deInit(){
-    [[FTMobileAgent sharedInstance] shutDown];
+    [FTMobileAgent shutDown];
 }
 #pragma mark ========== Bind/Unbind User ==========
 
@@ -255,9 +240,9 @@ void initRUMConfig(const char* rumConfigJson){
     if ([params.allKeys containsObject:@"sampleRate"]) {
         rumConfig.samplerate = [params[@"sampleRate"] doubleValue] * 100;
     }
-     if ([params.allKeys containsObject:@"sessionOnErrorSampleRate"]) {
+    if ([params.allKeys containsObject:@"sessionOnErrorSampleRate"]) {
         rumConfig.sessionOnErrorSampleRate  = [params[@"sessionOnErrorSampleRate"] doubleValue] * 100;
-     }
+    }
     if ([params.allKeys containsObject:@"enableNativeUserAction"]) {
         rumConfig.enableTraceUserAction = params[@"enableNativeUserAction"];
     }
@@ -382,7 +367,7 @@ void startAction(const char* json){
     NSString *actionType = [configDict objectForKey:@"actionType"];
     NSDictionary *property = [configDict objectForKey:@"property"];
     if(actionName && actionType){
-        [FTExternalDataManager.sharedManager addActionName:actionName actionType:actionType property:property];
+        [FTExternalDataManager.sharedManager startAction:actionName actionType:actionType property:property];
     }
 }
 /// 创建页面

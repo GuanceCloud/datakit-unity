@@ -4,6 +4,10 @@
 <dict>
 	<key>files</key>
 	<dict>
+		<key>Headers/FTConstants.h</key>
+		<data>
+		veYkBhjHfU/4YvjjUwEkRg1Q8wc=
+		</data>
 		<key>Headers/FTDataModifier.h</key>
 		<data>
 		W5zy1K95q7p5wDfvXmnCCmGKuzw=
@@ -38,7 +42,7 @@
 		</data>
 		<key>Headers/FTMobileSDK.h</key>
 		<data>
-		KN5RfsPIGmmCLkS/aKSNkjFWBJY=
+		8NN5VJ2F2CfS1XJgwOEZqKzgwgw=
 		</data>
 		<key>Headers/FTResourceContentModel.h</key>
 		<data>
@@ -70,7 +74,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		IB0o/KxZaQPt+rAuR64PSDD2Vi0=
+		7bAMddkG5poLOyMWXu2iuB+yOQ0=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -83,6 +87,17 @@
 	</dict>
 	<key>files2</key>
 	<dict>
+		<key>Headers/FTConstants.h</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			veYkBhjHfU/4YvjjUwEkRg1Q8wc=
+			</data>
+			<key>hash2</key>
+			<data>
+			Mqf8QIU3wOVPsKF3GZGhG2NaeN3iS0tbQApe/KJnZ4E=
+			</data>
+		</dict>
 		<key>Headers/FTDataModifier.h</key>
 		<dict>
 			<key>hash</key>
@@ -175,11 +190,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			KN5RfsPIGmmCLkS/aKSNkjFWBJY=
+			8NN5VJ2F2CfS1XJgwOEZqKzgwgw=
 			</data>
 			<key>hash2</key>
 			<data>
-			FUNIXzTpfNTSidvc0yx0bhBujlSeJaEt9Zc/wZWgApc=
+			JDP7V73F+YhExQmyUr98pALZ/Qasxp8MCJxCMB1DOhE=
 			</data>
 		</dict>
 		<key>Headers/FTResourceContentModel.h</key>
