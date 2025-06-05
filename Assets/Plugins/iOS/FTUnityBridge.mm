@@ -122,44 +122,30 @@ void install(const char* json){
     if ([params.allKeys containsObject:@"dbCacheLimit"]){
         config.dbCacheLimit = [params[@"dbCacheLimit"] doubleValue];
     }
-    NSMutableDictionary *globalContext = [[NSMutableDictionary alloc]init];
     if ([params.allKeys containsObject:@"globalContext"]) {
-        NSDictionary *context = [params valueForKey:@"globalContext"];
-        if(context.allKeys.count>0){
-            [globalContext addEntriesFromDictionary:context];
-        }
+        NSDictionary *globalContext = [params valueForKey:@"globalContext"];
+        config.globalContext = globalContext;
     }
-    config.globalContext = globalContext;
-
-    NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
+    
     if ([params.allKeys containsObject:@"dataModifier"]) {
-        NSDictionary *context = [params valueForKey:@"dataModifier"];
-        if(context.allKeys.count>0){
-            [dataModifierDict addEntriesFromDictionary:context];
-        }
+        NSDictionary *dataModifierDict = [params valueForKey:@"dataModifier"];
         config.dataModifier = ^id _Nullable(NSString * _Nonnull key, id  _Nonnull value) {
-        if ([dataModifierDict.allKeys containsObject:key]) {
-          return dataModifierDict[key];
-        }
-        return value;
-    };
+            if ([dataModifierDict.allKeys containsObject:key]) {
+                return dataModifierDict[key];
+            }
+            return value;
+        };
     }
-
-
-    NSMutableDictionary *dataModifierDict = [[NSMutableDictionary alloc]init];
+    
     if ([params.allKeys containsObject:@"lineDataModifier"]) {
-        NSDictionary *context = [params valueForKey:@"lineDataModifier"];
-        if(context.allKeys.count>0){
-            [dataModifierDict addEntriesFromDictionary:context];
-        }
-
+        NSDictionary *lineDataModifierDict = [params valueForKey:@"lineDataModifier"];
         config.lineDataModifier = ^NSDictionary<NSString *,id> * _Nullable(NSString * _Nonnull measurement, NSDictionary<NSString *,id> * _Nonnull data) {
-        if ([measurement isEqualToString:FT_LOGGER_SOURCE] || [measurement isEqualToString:FT_LOGGER_TVOS_SOURCE]) {
-          return [dataModifierDict valueForKey:@"log"];
-        }else{
-          return [dataModifierDict valueForKey:measurement];
-        }
-    };
+            if ([measurement isEqualToString:FT_LOGGER_SOURCE] || [measurement isEqualToString:FT_LOGGER_TVOS_SOURCE]) {
+                return [lineDataModifierDict valueForKey:@"log"];
+            }else{
+                return [lineDataModifierDict valueForKey:measurement];
+            }
+        };
     }
 
     if ([params.allKeys containsObject:@"serviceName"]) {
@@ -173,7 +159,7 @@ void install(const char* json){
 }
 /// SDK 关闭
 void deInit(){
-    [[FTMobileAgent sharedInstance] shutDown];
+    [FTMobileAgent shutDown];
 }
 #pragma mark ========== Bind/Unbind User ==========
 
@@ -254,9 +240,9 @@ void initRUMConfig(const char* rumConfigJson){
     if ([params.allKeys containsObject:@"sampleRate"]) {
         rumConfig.samplerate = [params[@"sampleRate"] doubleValue] * 100;
     }
-     if ([context.allKeys containsObject:@"sessionOnErrorSampleRate"]) {
+    if ([params.allKeys containsObject:@"sessionOnErrorSampleRate"]) {
         rumConfig.sessionOnErrorSampleRate  = [params[@"sessionOnErrorSampleRate"] doubleValue] * 100;
-     }
+    }
     if ([params.allKeys containsObject:@"enableNativeUserAction"]) {
         rumConfig.enableTraceUserAction = params[@"enableNativeUserAction"];
     }
@@ -381,7 +367,7 @@ void startAction(const char* json){
     NSString *actionType = [configDict objectForKey:@"actionType"];
     NSDictionary *property = [configDict objectForKey:@"property"];
     if(actionName && actionType){
-        [FTExternalDataManager.sharedManager addActionName:actionName actionType:actionType property:property];
+        [FTExternalDataManager.sharedManager startAction:actionName actionType:actionType property:property];
     }
 }
 /// 创建页面
@@ -493,33 +479,62 @@ void addResource(const char* json){
     content.httpStatusCode = [[params objectForKey:@"resourceStatus"] integerValue];
     FTResourceMetricsModel *metrics = [[FTResourceMetricsModel alloc]init];
     if(netStatus){
-        long tcpStartTime = [[netStatus objectForKey:@"tcpStartTime"] longValue];
-        long tcpEndTime = [[netStatus objectForKey:@"tcpEndTime"] longValue];
-        NSNumber  *tcpTime = @(tcpEndTime - tcpStartTime);
-        
-        long dnsEndTime = [[netStatus objectForKey:@"dnsEndTime"] longValue];
-        long dnsStartTime = [[netStatus objectForKey:@"dnsStartTime"] longValue];
-        NSNumber * dnsTime = @(dnsEndTime - dnsStartTime);
-        
-        long sslEndTime = [[netStatus objectForKey:@"sslEndTime"] longValue];
-        long sslStartTime = [[netStatus objectForKey:@"sslStartTime"] longValue];
-        NSNumber * sslTime = @(sslEndTime - sslStartTime);
-        
-        long responseEndTime = [[netStatus objectForKey:@"responseEndTime"] longValue];
-        long responseStartTime = [[netStatus objectForKey:@"responseStartTime"] longValue];
-        long requestStartTime = [[netStatus objectForKey:@"requestStartTime"] longValue];
-        NSNumber * ttfb = @(responseStartTime - requestStartTime);
-        NSNumber *transTime = @(responseEndTime - responseStartTime);
-        
-        long fetchStartTime = [[netStatus objectForKey:@"fetchStartTime"] longValue];
-        NSNumber * duration = @(responseEndTime - fetchStartTime);
-        
-        metrics.resource_tcp = tcpTime;
-        metrics.resource_dns = dnsTime;
-        metrics.resource_ssl = sslTime;
-        metrics.resource_trans = transTime;
-        metrics.resource_ttfb = ttfb;
-        metrics.duration = duration;
+        NSNumber *fetchStartTime = netStatus[@"fetchStartTime"];
+        NSNumber *tcpTime = netStatus[@"tcpTime"];
+        NSNumber *dnsTime = netStatus[@"dnsTime"];
+        NSNumber *firstByteTime = netStatus[@"firstByteTime"];
+        NSNumber *responseTime = netStatus[@"responseTime"];
+        NSNumber *sslTime = netStatus[@"sslTime"];
+        NSNumber *ttfb = netStatus[@"ttfb"];
+        NSNumber *tcpStartTime = netStatus[@"tcpStartTime"];
+        NSNumber *tcpEndTime = netStatus[@"tcpEndTime"];
+        NSNumber *dnsStartTime = netStatus[@"dnsStartTime"];
+        NSNumber *dnsEndTime = netStatus[@"dnsEndTime"];
+        NSNumber *responseStartTime = netStatus[@"responseStartTime"];
+        NSNumber *responseEndTime = netStatus[@"responseEndTime"];
+        NSNumber *sslStartTime = netStatus[@"sslStartTime"];
+        NSNumber *sslEndTime = netStatus[@"sslEndTime"];
+        if (fetchStartTime) {
+            [metrics setFetchStartNsTimeInterval:[fetchStartTime longLongValue]];
+        }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        if (tcpTime) {
+            metrics.resource_tcp = tcpTime;
+        }
+        if (dnsTime) {
+            metrics.resource_dns = dnsTime;
+        }
+        if (firstByteTime) {
+            metrics.resource_first_byte = firstByteTime;
+        }
+        if (responseTime) {
+            metrics.resource_trans = responseTime;
+        }
+        if (sslTime) {
+            metrics.resource_ssl = sslTime;
+        }
+        if (ttfb) {
+            metrics.resource_ttfb = ttfb;
+        }
+#pragma clang diagnostic pop
+        if (tcpStartTime && tcpEndTime) {
+            [metrics setConnectEndNsTimeInterval:[tcpEndTime longLongValue]];
+            [metrics setConnectStartNsTimeInterval:[tcpStartTime longLongValue]];
+        }
+        if (dnsStartTime && dnsEndTime) {
+            [metrics setDnsEndNsTimeInterval:[dnsEndTime longLongValue]];
+            [metrics setDnsStartNsTimeInterval:[dnsStartTime longLongValue]];
+        }
+        if (sslEndTime && sslStartTime){
+            [metrics setSslEndNsTimeInterval:[sslEndTime longLongValue]];
+            [metrics setSslStartNsTimeInterval:[sslStartTime longLongValue]];
+        }
+        if (responseEndTime && responseStartTime) {
+            [metrics setResponseEndNsTimeInterval:[responseEndTime longLongValue]];
+            [metrics setResponseStartNsTimeInterval:[responseStartTime longLongValue]];
+            [metrics setFetchEndNsTimeInterval:[responseEndTime longLongValue]];
+        }
     }
     [FTExternalDataManager.sharedManager addResourceWithKey:resourceId metrics:metrics content:content];
 }
