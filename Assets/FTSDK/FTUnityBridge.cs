@@ -480,7 +480,7 @@ namespace FTSDK.Unity.Bridge
     /// </summary>
     public class FTUnityBridge
     {
-        public const string SDK_VERSION = "1.0.1-alpha.1";
+        public const string SDK_VERSION = "1.1.0-alpha.1";
         private const string KEY_METHOD_INSTALL = "Install";
         private const string KEY_METHOD_INIT_RUM_CONFIG = "InitRUMConfig";
         private const string KEY_METHOD_INIT_LOG_CONFIG = "InitLogConfig";
