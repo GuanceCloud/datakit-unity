@@ -81,7 +81,7 @@ namespace FTSDK.Unity.Bridge
         /// <summary>
         /// DB 缓存限制大小。范围 [30MB,)，默认 100MB，单位 byte
         /// </summary>
-        public int dbCacheLimit { get; set; }
+        public long dbCacheLimit { get; set; }
         /// <summary>
         /// 设置数据库中数据丢弃规则。
         ///丢弃策略：discard丢弃新数据（默认）、discardOldest丢弃旧数据
@@ -371,27 +371,27 @@ namespace FTSDK.Unity.Bridge
     /// <summary>
     /// 错误附加数据
     /// </summary>
-    public enum ErrorMonitorType : int
+    public enum ErrorMonitorType 
     {
-        All = -1,
-        Battery = 1 << 1,
-        Memory = 1 << 2,
-        CPU = 1 << 3
+        All,
+        Battery,
+        Memory,
+        CPU
     }
 
     /// <summary>
     /// 页面监控指标
     /// </summary>
-    public enum DeviceMetricsMonitorType : int
+    public enum DeviceMetricsMonitorType 
     {
-        All = -1,
+        All,
         /// <summary>
         /// 仅仅支持 Android
         /// </summary>
-        Battery = 1 << 1,
-        Memory = 1 << 2,
-        CPU = 1 << 3,
-        FPS = 1 << 4
+        Battery,
+        Memory,
+        CPU,
+        FPS
     }
 
     /// <summary>
@@ -445,11 +445,7 @@ namespace FTSDK.Unity.Bridge
     {
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value is ErrorMonitorType || value is DeviceMetricsMonitorType)
-            {
-                writer.WriteValue(Convert.ToInt64(value));
-            }
-            else if (value is DetectFrequency || value is TraceType || value is LogCacheDiscard || value is LogLevel)
+            if (value is DetectFrequency || value is TraceType || value is LogCacheDiscard || value is LogLevel || value is ErrorMonitorType || value is DeviceMetricsMonitorType)
             {
                 writer.WriteValue(value.ToString().ToLower());
             }

@@ -97,10 +97,10 @@ void install(const char* json){
         config.autoSync = [params[@"autoSync"] boolValue];
     }
     if ([params.allKeys containsObject:@"syncPageSize"]) {
-        config.syncPageSize = [params[@"syncPageSize"] intValue];
+        config.syncPageSize = [params[@"syncPageSize"] integerValue];
     }
     if ([params.allKeys containsObject:@"syncSleepTime"]) {
-        config.syncSleepTime = [params[@"syncSleepTime"] intValue];
+        config.syncSleepTime = [params[@"syncSleepTime"] integerValue];
     }
     if ([params.allKeys containsObject:@"enableDataIntegerCompatible"]) {
         config.enableDataIntegerCompatible = [params[@"enableDataIntegerCompatible"] boolValue];
@@ -120,7 +120,7 @@ void install(const char* json){
         config.enableLimitWithDbSize = [params[@"enableLimitWithDbSize"] boolValue];
     }
     if ([params.allKeys containsObject:@"dbCacheLimit"]){
-        config.dbCacheLimit = [params[@"dbCacheLimit"] doubleValue];
+        config.dbCacheLimit = [params[@"dbCacheLimit"] integerValue];
     }
     if ([params.allKeys containsObject:@"globalContext"]) {
         NSDictionary *globalContext = [params valueForKey:@"globalContext"];
@@ -331,11 +331,14 @@ void initRUMConfig(const char* rumConfigJson){
     if ([params.allKeys containsObject:@"enableTrackNativeCrash"]){
       rumConfig.enableTrackAppCrash = [params[@"enableTrackNativeCrash"] boolValue];
     }
+    if ([params.allKeys containsObject:@"enableTrackNativeAppANR"]){
+      rumConfig.enableTrackAppANR = [params[@"enableTrackNativeAppANR"] boolValue];
+    }
     if ([params.allKeys containsObject:@"enableTrackNativeFreeze"]){
       rumConfig.enableTrackAppFreeze = [params[@"enableTrackNativeFreeze"] boolValue];
     }
     if ([params.allKeys containsObject:@"nativeFreezeDurationMs"]){
-        rumConfig.freezeDurationMs = [params[@"nativeFreezeDurationMs"] doubleValue];
+        rumConfig.freezeDurationMs = [params[@"nativeFreezeDurationMs"] integerValue];
     }
     if ([params.allKeys containsObject:@"rumDiscardStrategy"]) {
         NSString *type = params[@"rumDiscardStrategy"];
@@ -346,7 +349,7 @@ void initRUMConfig(const char* rumConfigJson){
         }
     }
     if ([params.allKeys containsObject:@"rumCacheLimitCount"]) {
-        rumConfig.rumCacheLimitCount = [params[@"rumCacheLimitCount"] intValue];
+        rumConfig.rumCacheLimitCount = [params[@"rumCacheLimitCount"] integerValue];
     }
     if ([params.allKeys containsObject:@"globalContext"]) {
         rumConfig.globalContext = params[@"globalContext"];
@@ -618,7 +621,7 @@ void initLogConfig(const char* logConfigJson){
         }
     }
     if ([params.allKeys containsObject:@"logCacheLimitCount"]) {
-        config.logCacheLimitCount = [params[@"logCacheLimitCount"] intValue];
+        config.logCacheLimitCount = [params[@"logCacheLimitCount"] integerValue];
     }
     if([params.allKeys containsObject:@"globalContext"]){
         config.globalContext = [params objectForKey:@"globalContext"];
@@ -687,8 +690,12 @@ void initTraceConfig(const char* traceConfigJson){
             trace.networkTraceType = FTNetworkTraceTypeJaeger;
         }
     }
-    trace.enableLinkRumData = [params objectForKey:@"enableLinkRUMData"];
-    trace.enableAutoTrace = [params objectForKey:@"enableNativeAutoTrace"];
+    if ([params.allKeys containsObject:@"enableLinkRumData"]) {
+        trace.enableLinkRumData = params[@"enableLinkRumData"];
+    }
+    if ([params.allKeys containsObject:@"enableNativeAutoTrace"]) {
+        trace.enableAutoTrace = params[@"enableNativeAutoTrace"];
+    }
     [[FTMobileAgent sharedInstance] startTraceWithConfigOptions:trace];
 }
 /// 获取 trace 需要添加的请求头
