@@ -120,7 +120,7 @@ void install(const char* json){
         config.enableLimitWithDbSize = [params[@"enableLimitWithDbSize"] boolValue];
     }
     if ([params.allKeys containsObject:@"dbCacheLimit"]){
-        config.dbCacheLimit = [params[@"dbCacheLimit"] integerValue];
+        config.dbCacheLimit = [params[@"dbCacheLimit"] longLongValue];
     }
     if ([params.allKeys containsObject:@"globalContext"]) {
         NSDictionary *globalContext = [params valueForKey:@"globalContext"];
