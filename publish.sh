@@ -19,7 +19,7 @@ WORKSPACE_PATH=$2
 UNITY_INSTALL_PATH=$3
 
 # 导出 unitypackage 
-$UNITY_INSTALL_PATH -batchmode -projectPath ${WORKSPACE_PATH} -exportPackage Assets/Plugins $UNITY_PACKAGE_NAME -quit
+$UNITY_INSTALL_PATH -batchmode -projectPath ${WORKSPACE_PATH} -exportPackage Assets/Plugins Assets/FTSDK $UNITY_PACKAGE_NAME -quit
 
 # 上传至 OSS
 OSS_TARGET_PATH=oss://zhuyun-static-files-production/ft-sdk-package/unitypackage/${FT_PROD_ENV}/${UNITY_PACKAGE_NAME}
