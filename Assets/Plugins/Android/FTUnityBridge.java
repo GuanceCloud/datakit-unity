@@ -67,7 +67,7 @@ public class FTUnityBridge {
 
 
     /**
-     * Unity 方法转化
+     * Unity method conversion
      *
      * @param method
      * @param json
@@ -135,7 +135,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * SDK 初始化
+     * SDK initialization
      *
      * @param data
      */
@@ -144,7 +144,7 @@ public class FTUnityBridge {
         String serverUrl = (String) map.get("serverUrl");
         String datakitUrl = (String) map.get("datakitUrl");
         if (datakitUrl == null) {
-            //兼容旧版本
+            //Compatible with old version
             datakitUrl = serverUrl;
         }
         String datawayUrl = (String) map.get("datawayUrl");
@@ -241,7 +241,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * SDK 释放
+     * SDK release
      *
      * @param data
      */
@@ -250,7 +250,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 绑定用户数据
+     * Bind user data
      *
      * @param data
      */
@@ -278,7 +278,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 释放用户数据
+     * Release user data
      *
      * @param data
      */
@@ -287,7 +287,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 初始化 RUM
+     * Initialize RUM
      *
      * @param data
      */
@@ -438,7 +438,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 创建 View
+     * Create View
      *
      * @param data
      */
@@ -449,7 +449,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * View 开始
+     * View start
      *
      * @param data
      */
@@ -461,7 +461,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * View 结束
+     * View end
      *
      * @param data
      */
@@ -476,7 +476,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 添加 Action
+     * Add Action
      */
     private static void addAction(JSONObject data) {
         String actionName = data.optString("actionName");
@@ -486,7 +486,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * Action 开始
+     * Action start
      *
      * @param data
      */
@@ -499,7 +499,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * Resource 开始
+     * Resource start
      *
      * @param data
      */
@@ -511,7 +511,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * Resource 结束
+     * Resource end
      *
      * @param data
      */
@@ -523,7 +523,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 添加 Resource 数据
+     * Add Resource data
      *
      * @param data
      */
@@ -563,7 +563,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 添加 Error 数据
+     * Add Error data
      *
      * @param data
      */
@@ -582,7 +582,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 添加 LongTask 数据
+     * Add LongTask data
      *
      * @param data
      */
@@ -594,7 +594,7 @@ public class FTUnityBridge {
 
 
     /**
-     * 初始化 Log 配置
+     * Initialize Log configuration
      *
      * @param data
      */
@@ -682,7 +682,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 初始化 Trace 配置
+     * Initialize Trace configuration
      *
      * @param data
      */
@@ -748,7 +748,7 @@ public class FTUnityBridge {
 
 
     /**
-     * 动态设置全局 tag
+     * Dynamically set global tag
      */
     private static void appendGlobalContext(JSONObject extra) {
         if (extra != null) {
@@ -758,7 +758,7 @@ public class FTUnityBridge {
 
 
     /**
-     * 动态设置 log 全局 tag
+     * Dynamically set log global tag
      */
     private static void appendLogGlobalContext(JSONObject extra) {
         if (extra != null) {
@@ -767,7 +767,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 动态设置 RUM 全局 tag
+     * Dynamically set RUM global tag
      */
     private static void appendRUMGlobalContext(JSONObject extra) {
         if (extra != null) {
@@ -776,7 +776,7 @@ public class FTUnityBridge {
     }
 
     /**
-     * 进行缓存数据同步
+     * Perform cache data synchronization
      */
     private static void flushSyncData() {
         FTSdk.flushSyncData();
@@ -784,14 +784,14 @@ public class FTUnityBridge {
     }
 
     /**
-     * 清理 SDK 数据
+     * Clear SDK data
      */
     private static void clearAllData() {
         FTSdk.clearAllData();
     }
 
     /**
-     * 转化 JSON 为 hashMap
+     * Convert JSON to hashMap
      *
      * @param property
      * @param <T>

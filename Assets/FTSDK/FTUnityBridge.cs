@@ -15,89 +15,89 @@ using System.Linq;
 namespace FTSDK.Unity.Bridge
 {
     /// <summary>
-    ///  SDK 配置
+    ///  SDK Configuration
     /// </summary>
     public class SDKConfig
     {
         /// <summary>
-        /// datakit 访问地址 URL 地址，例子：http://10.0.0.1:9529，端口默认 9529。注意：安装 SDK 设备需能访问这地址
+        /// datakit access URL address, example: http://10.0.0.1:9529, default port 9529. Note: The device installing the SDK must be able to access this address
         /// </summary>
         /// 
         [Obsolete("This params is deprecated. Replace with 'datakitUrl' instead")]
         public string serverUrl { get; set; }
 
         /// <summary>
-        /// datakit 访问地址 URL 地址，例子：http://10.0.0.1:9529，端口默认 9529。注意：安装 SDK 设备需能访问这地址
+        /// datakit access URL address, example: http://10.0.0.1:9529, default port 9529. Note: The device installing the SDK must be able to access this address
         /// </summary>
         public string datakitUrl { get; set; }
 
         /// <summary>
-        /// dataway 访问 URL 地址，例子：http://10.0.0.1:9528，端口默认 9528，注意：安装 SDK 设备需能访问这地址.注意：datakit 和 dataway 配置两者二选一
+        /// dataway access URL address, example: http://10.0.0.1:9528, default port 9528, note: the device installing the SDK must be able to access this address. Note: choose one between datakit and dataway configuration
         /// </summary>
         public string datawayUrl { get; set; }
 
         /// <summary>
-        /// 认证 token，需要与 datawayUrl 同时配置
+        /// Authentication token, needs to be configured together with datawayUrl
         /// </summary>
         public string clientToken { get; set; }
         /// <summary>
-        /// 是否开启 Debug 模式
+        /// Whether to enable Debug mode
         /// </summary>
         public bool debug { get; set; }
         /// <summary>
-        /// 数据上传环境，默认 prod。prod：线上环境；gray：灰度环境；pre：预发布环境；common：日常环境；local：本地环境，支持自定义
+        /// Data upload environment, default prod. prod: production environment; gray: gray environment; pre: pre-release environment; common: daily environment; local: local environment, supports customization
         /// </summary>
         public string env { get; set; }
         public Dictionary<string, string> globalContext { get; set; }
         /// <summary>
-        /// 应用服务名 android df_rum_android, iOS df_rum_ios
+        /// Application service name android df_rum_android, iOS df_rum_ios
         /// </summary>
         public string serviceName { get; set; }
         /// <summary>
-        /// 是否在采集数据后自动同步到服务器，默认为 true。当为 false 时使用 FTUnityBridge.flushSyncData() 自行管理数据同步
+        /// Whether to automatically sync data to server after collection, default true. When false, use FTUnityBridge.flushSyncData() to manage data synchronization manually
         /// </summary>
         public bool autoSync { get; set; }
         /// <summary>
-        /// 设置同步请求条目数。范围 [5,）注意：请求条目数越大，代表数据同步占用更大的计算资源，默认为 10
+        /// Set synchronization request entry count. Range [5,). Note: The larger the request entry count, the more computational resources data synchronization occupies, default is 10
         /// </summary>
         public int syncPageSize { get; set; }
         /// <summary>
-        /// 设置同步间歇时间。范围 [0,5000]，单位毫秒，默认不设置
+        /// Set synchronization interval time. Range [0,5000], unit milliseconds, default not set
         /// </summary>
         public int syncSleepTime { get; set; }
         /// <summary>
-        /// 需要与 web 数据共存情况下，建议开启。此配置用于处理 web 数据类型存储兼容问题，默认开启
+        /// Recommended to enable when coexistence with web data is needed. This configuration is used to handle web data type storage compatibility issues, enabled by default
         /// </summary>
         public bool enableDataIntegerCompatible { get; set; }
         /// <summary>
-        /// 对上传同步数据进行 deflate 压缩，默认关闭
+        /// Enable deflate compression for uploaded synchronization data, disabled by default
         /// </summary>
         public bool compressIntakeRequests { get; set; }
         /// <summary>
-        /// 开启使用 db 限制数据大小，默认 100MB，单位 Byte，数据库越大，磁盘压力越大，默认不开启。
-        /// 注意：开启之后 Log 配置 logCacheLimitCount 及 RUM 配置rumCacheLimitCount 将失效
+        /// Enable using db to limit data size, default 100MB, unit Byte, larger database means greater disk pressure, disabled by default.
+        /// Note: After enabling, Log configuration logCacheLimitCount and RUM configuration rumCacheLimitCount will be invalid
         /// </summary>
         public bool enableLimitWithDbSize { get; set; }
         /// <summary>
-        /// DB 缓存限制大小。范围 [30MB,)，默认 100MB，单位 byte
+        /// DB cache limit size. Range [30MB,), default 100MB, unit byte
         /// </summary>
         public long dbCacheLimit { get; set; }
         /// <summary>
-        /// 设置数据库中数据丢弃规则。
-        ///丢弃策略：discard丢弃新数据（默认）、discardOldest丢弃旧数据
+        /// Set data discard rules in database.
+        /// Discard strategy: discard discard new data (default), discardOldest discard old data
         /// </summary>
         public DBCacheDiscard dbDiscardStrategy { get; set; }
         /// <summary>
-        /// 对单个字段进行更改
+        /// Modify individual fields
         /// </summary>
         public Dictionary<string, object> dataModifier { get; set; }
         /// <summary>
-        ///  对单条数据数据进行更改。
+        ///  Modify individual data entries.
         /// </summary>
         public Dictionary<string, Dictionary<string, object>> lineDataModifier { get; set; }
 
         /// <summary>
-        /// Unity SDK 版本号
+        /// Unity SDK version number
         /// </summary>
         public string sdkVersion
         {
@@ -111,265 +111,265 @@ namespace FTSDK.Unity.Bridge
     }
 
     /// <summary>
-    ///  RUM 配置
+    ///  RUM Configuration
     /// </summary>
     public class RUMConfig
     {
         /// <summary>
-        /// Android  RUM AppId
+        /// Android RUM AppId
         /// </summary>
         public string androidAppId { get; set; }
         /// <summary>
-        /// iOS  RUM AppId
+        /// iOS RUM AppId
         /// </summary>
         public string iOSAppId { get; set; }
 
         /// <summary>
-        /// 采集率的值范围为[0,1]，默认值为 1
+        /// Collection rate value range [0,1], default value 1
         /// </summary>
         public float sampleRate { get; set; }
 
         /// <summary>
-        /// 错误会话采样率的值范围为[0,1]，默认值为 0。未被采样命中的 Session ，命中 ERROR 采样，发生错误时，采集错误前 1 分钟数据
+        /// Error session sampling rate value range [0,1], default value 0. For Sessions not sampled, when ERROR sampling is hit, collect data from 1 minute before the error occurs
         /// </summary>
         public float sessionOnErrorSampleRate { get; set; }
 
         /// <summary>
-        /// 添加 SDK 全局属性
+        /// Add SDK global properties
         /// </summary>
         public Dictionary<string, string> globalContext { get; set; }
         /// <summary>
-        /// 是否开启 Native Action 收集，默认 false
+        /// Whether to enable Native Action collection, default false
         /// </summary>
         public bool enableNativeUserAction { get; set; }
 
         /// <summary>
-        /// 是否开启 Native View 收集，默认 false
+        /// Whether to enable Native View collection, default false
         /// </summary>
         public bool enableNativeUserView { get; set; }
         /// <summary>
-        /// 是否开启 Native Resource 请求，Android 支持 Okhttp，iOS 使用 NSURLSession，默认 false
+        /// Whether to enable Native Resource requests, Android supports Okhttp, iOS uses NSURLSession, default false
         /// </summary>
         public bool enableNativeUserResource { get; set; }
         /// <summary>
-        /// 是否采集请求目标域名地址的 IP。作用域：只影响 enableNativeUserResource 为 true 的默认采集。iOS：>= iOS 13 下支持。Android：单个 Okhttp 对相同域名存在 IP 缓存机制，相同 OkhttpClient，在连接服务端 IP 不发生变化的前提下，只会生成一次
+        /// Whether to collect IP address of request target domain. Scope: only affects default collection when enableNativeUserResource is true. iOS: supported on >= iOS 13. Android: single Okhttp has IP caching mechanism for same domain, same OkhttpClient will only generate once under the premise that the connected server IP doesn't change
         /// </summary>
         public bool enableResourceHostIP { get; set; }
         /// <summary>
-        /// 是否采集 Native Java Crash、C/C++ Crash 
+        /// Whether to collect Native Java Crash, C/C++ Crash
         /// </summary>
         public bool enableTrackNativeCrash { get; set; }
         /// <summary>
-        /// 是否开启 `Native ANR` 监测，默认为 `false`
+        /// Whether to enable `Native ANR` monitoring, default `false`
         /// </summary>
         public bool enableTrackNativeAppANR { get; set; }
         /// <summary>
-        /// 是否进行 `Native Freeze` 自动追踪，默认为 `false`
+        /// Whether to perform `Native Freeze` automatic tracking, default `false`
         /// </summary>
         public bool enableTrackNativeFreeze { get; set; }
         /// <summary>
-        /// 设置采集 `Native Freeze`卡顿的阈值，取值范围 [100,)，单位毫秒。iOS 默认 250ms，Android 默认 1000ms
+        /// Set threshold for collecting `Native Freeze` stuttering, value range [100,), unit milliseconds. iOS default 250ms, Android default 1000ms
         /// </summary>
         public int nativeFreezeDurationMs { get; set; }
         /// <summary>
-        /// 错误监控补充类型：all、battery、 memory、 cpu
+        /// Error monitoring supplement types: all, battery, memory, cpu
         /// </summary>
         public ErrorMonitorType extraMonitorTypeWithError { get; set; }
         /// <summary>
-        /// 页面监控补充类型： all 、battery（仅Android支持)、 memory、cpu、fps
+        /// Page monitoring supplement types: all, battery (Android only), memory, cpu, fps
         /// </summary>
         public DeviceMetricsMonitorType deviceMonitorType { get; set; }
         /// <summary>
-        /// normal(默认)、 frequent、rare
+        /// normal (default), frequent, rare
         /// </summary>
         public DetectFrequency detectFrequency { get; set; }
         /// <summary>
-        /// 本地缓存最大 RUM 条目数量限制 [10_000,)，默认 100_000
+        /// Local cache maximum RUM entry count limit [10_000,), default 100_000
         /// </summary>
         public int rumCacheLimitCount { get; set; }
         /// <summary>
-        /// 丢弃策略：`discard`丢弃新数据（默认）、`discardOldest`丢弃旧数据
+        /// Discard strategy: `discard` discard new data (default), `discardOldest` discard old data
         /// </summary>
         public RUMCacheDiscard rumDiscardStrategy { get; set; }
 
     }
 
     /// <summary>
-    ///  Trace 链路配置
+    ///  Trace link configuration
     /// </summary>
     public class TraceConfig
     {
         /// <summary>
-        /// 采集率的值范围为 [0,1]，默认值为 1
+        /// Collection rate value range [0,1], default value 1
         /// </summary>
         public float sampleRate { get; set; }
         /// <summary>
-        /// 链路类型：ddTrace（默认）、zipkinMultiHeader、zipkinSingleHeader、traceparent、skywalking、jaeger
+        /// Link type: ddTrace (default), zipkinMultiHeader, zipkinSingleHeader, traceparent, skywalking, jaeger
         /// </summary>
         public TraceType traceType { get; set; }
         /// <summary>
-        /// 是否与 RUM 数据关联，默认 false
+        /// Whether to associate with RUM data, default false
         /// </summary>
         public bool enableLinkRumData { get; set; } = false;
 
         /// <summary>
-        /// 是否开启自动添加 Trace header，Android 支持 Okhttp，iOS 使用 NSURLSession
+        /// Whether to enable automatic Trace header addition, Android supports Okhttp, iOS uses NSURLSession
         /// </summary>
         public bool enableNativeAutoTrace { get; set; } = false;
 
     }
     /// <summary>
-    /// Log 配置
+    /// Log Configuration
     /// </summary>
     public class LogConfig
     {
         /// <summary>
-        /// 采集率的值范围为>= 0、<= 1，默认值为 1
+        /// Collection rate value range >= 0, <= 1, default value 1
         /// </summary>
 
         public float sampleRate { get; set; }
         /// <summary>
-        /// 是否关联 RUM 数据
+        /// Whether to associate with RUM data
         /// </summary>
         public bool enableLinkRumData { get; set; }
 
         /// <summary>
-        /// 是否开启自定义日志
+        /// Whether to enable custom logs
         /// </summary>
         public bool enableCustomLog { get; set; }
 
         /// <summary>
-        /// 日志丢弃策略：discard丢弃新数据（默认）、discardOldest丢弃旧数据
+        /// Log discard strategy: discard discard new data (default), discardOldest discard old data
         /// </summary>
         public LogCacheDiscard discardStrategy { get; set; }
         /// <summary>
-        /// 日志等级过滤，数组中需填写 日志等级：info提示、warning警告、error错误、critical、ok恢复，默认不过滤
+        /// Log level filtering, array needs to fill log levels: info prompt, warning warning, error error, critical, ok recovery, no filtering by default
         /// </summary>
         public List<LogLevel> logLevelFilters { get; set; }
         /// <summary>
-        /// 添加 Log 全局属性
+        /// Add Log global properties
         /// </summary>
         public Dictionary<string, string> globalContext { get; set; }
         /// <summary>
-        /// 本地缓存最大日志条目数量限制 [1000,)，日志越大，代表磁盘缓存压力越大，默认 5000
+        /// Local cache maximum log entry count limit [1000,), larger logs mean greater disk cache pressure, default 5000
         /// </summary>
         public int logCacheLimitCount { get; set; }
     }
 
     /// <summary>
-    /// 用户数据
+    /// User data
     /// </summary>
     public class UserData
     {
         /// <summary>
-        /// 用户 id
+        /// User id
         /// </summary>
         public string userId { get; set; }
         /// <summary>
-        /// 用户名称
+        /// User name
         /// </summary>
         public string userName { get; set; }
         /// <summary>
-        /// 用户邮箱
+        /// User email
         /// </summary>
         public string userEmail { get; set; }
         /// <summary>
-        /// 用户的额外信息
+        /// User's additional information
         /// </summary>
         public Dictionary<string, string> extra { get; set; }
     }
 
     /// <summary>
-    ///  Resource 内容指标
+    ///  Resource content metrics
     /// </summary>
     public class ResourceParams
     {
         /// <summary>
-        /// 请求 url
+        /// Request url
         /// </summary>
         public string url { get; set; } = "";
         /// <summary>
-        /// 请求头
+        /// Request headers
         /// </summary>
         public Dictionary<string, string> requestHeader { get; set; }
         /// <summary>
-        /// 响应头
+        /// Response headers
         /// </summary>
         public Dictionary<string, string> responseHeader { get; set; }
         /// <summary>
-        /// 响应 connection
+        /// Response connection
         /// </summary>
         public string responseConnection { get; set; } = "";
         /// <summary>
-        /// 响应 ContentType
+        /// Response ContentType
         /// </summary>
         public string responseContentType { get; set; } = "";
         /// <summary>
-        /// 响应 ContentEncoding
+        /// Response ContentEncoding
         /// </summary>
         public string responseContentEncoding { get; set; } = "";
         /// <summary>
-        /// http 方法
+        /// http method
         /// </summary>
         public string resourceMethod { get; set; } = "";
         /// <summary>
-        /// 返回数据 body
+        /// Return data body
         /// </summary>
         public string responseBody { get; set; } = "";
         /// <summary>
-        /// 请求结果状态码
+        /// Request result status code
         /// </summary>
         public int resourceStatus { get; set; } = -1;
 
     }
 
     // /// <summary>
-    // /// Resource 网络耗时指标
+    // /// Resource network time metrics
     // /// </summary>
     // public class NetStatus
     // {
 
     //     /// <summary>
-    //     /// 请求任务开始时间
+    //     /// Request task start time
     //     /// </summary>
     //     public long callStartTime { get; set; } = -1L;
     //     /// <summary>
-    //     /// tcp 连接时间
+    //     /// tcp connection time
     //     /// </summary>
     //     public long tcpStartTime { get; set; } = -1L;
     //     /// <summary>
-    //     /// tcp 结束时间
+    //     /// tcp end time
     //     /// </summary>
     //     public long tcpEndTime { get; set; } = -1L;
     //     /// <summary>
-    //     /// dns 开始时间
+    //     /// dns start time
     //     /// </summary>
     //     public long dnsStartTime { get; set; } = -1L;
     //     /// <summary>
-    //     /// dns 结束时间
+    //     /// dns end time
     //     /// </summary>
     //     public long dnsEndTime { get; set; } = -1L;
     //     /// <summary>
-    //     /// 响应开始时间
+    //     /// Response start time
     //     /// </summary>
     //     public long bodyStartTime { get; set; } = -1L;
     //     /// <summary>
-    //     /// 响应结束时间
+    //     /// Response end time
     //     /// </summary>
     //     public long bodyEndTime { get; set; } = -1L;
     //     /// <summary>
-    //     /// ssl 开始时间
+    //     /// ssl start time
     //     /// </summary>
     //     public long sslStartTime { get; set; } = -1L;
     //     /// <summary>
-    //     /// ssl 结束时间
+    //     /// ssl end time
     //     /// </summary>
     //     public long sslEndTime { get; set; } = -1L;
 
     // }
 
     /// <summary>
-    /// 错误附加数据
+    /// Error additional data
     /// </summary>
     public enum ErrorMonitorType 
     {
@@ -380,13 +380,13 @@ namespace FTSDK.Unity.Bridge
     }
 
     /// <summary>
-    /// 页面监控指标
+    /// Page monitoring metrics
     /// </summary>
     public enum DeviceMetricsMonitorType 
     {
         All,
         /// <summary>
-        /// 仅仅支持 Android
+        /// Only supports Android
         /// </summary>
         Battery,
         Memory,
@@ -395,12 +395,12 @@ namespace FTSDK.Unity.Bridge
     }
 
     /// <summary>
-    /// 扫描周期
+    /// Scan frequency
     /// </summary>
     public enum DetectFrequency { Normal, Frequent, Rare }
 
     /// <summary>
-    /// 链路类型
+    /// Link type
     /// </summary>
     public enum TraceType
     {
@@ -413,21 +413,21 @@ namespace FTSDK.Unity.Bridge
     }
 
     /// <summary>
-    /// 日志缓存丢弃策略
+    /// Log cache discard strategy
     /// </summary>
     public enum LogCacheDiscard { Discard, DiscardOldest }
     /// <summary>
-    /// 数据缓存丢弃策略
+    /// Data cache discard strategy
     /// </summary>
     public enum DBCacheDiscard { Discard, DiscardOldest }
     /// <summary>
-    /// RUM 缓存丢弃策略
+    /// RUM cache discard strategy
     /// </summary>
     public enum RUMCacheDiscard { Discard, DiscardOldest }
 
 
     /// <summary>
-    /// 日志等级
+    /// Log level
     /// </summary>
     public enum LogLevel
     {
@@ -439,7 +439,7 @@ namespace FTSDK.Unity.Bridge
     }
 
     /// <summary>
-    /// Enum 转化为 String
+    /// Enum to String conversion
     /// </summary>
     public class BridgeEnumConverter : StringEnumConverter
     {
@@ -457,7 +457,7 @@ namespace FTSDK.Unity.Bridge
     }
 
     /// <summary>
-    /// 删除字典空 value
+    /// Remove null values from dictionary
     /// </summary>
     public static class DictionaryExtensions
     {
@@ -472,7 +472,7 @@ namespace FTSDK.Unity.Bridge
 
 
     /// <summary>
-    /// Unity 桥接接口
+    /// Unity bridge interface
     /// </summary>
     public class FTUnityBridge
     {
@@ -517,10 +517,10 @@ namespace FTSDK.Unity.Bridge
 #if (UNITY_IOS && !UNITY_EDITOR)
 
         /// <summary>
-        ///  iOS 桥接调用方法
+        ///  iOS bridge call method
         /// </summary>
-        /// <param name="method">方法名</param>
-        /// <param name="json">json 格式参数</param>
+        /// <param name="method">Method name</param>
+        /// <param name="json">json format parameters</param>
         /// <returns></returns>
         [DllImport("__Internal")]
         private static extern IntPtr invokeMethod(string method, string json);
@@ -530,7 +530,7 @@ namespace FTSDK.Unity.Bridge
 #if (UNITY_ANDROID && !UNITY_EDITOR)
          
         /// <summary>
-        /// Android 桥接方法调用类
+        /// Android bridge method call class
         /// </summary>
         /// 
         private const string ANDROID_PLUGIN_CLASS_NAME = "com.ft.sdk.unity.bridge.FTUnityBridge";
@@ -540,7 +540,7 @@ namespace FTSDK.Unity.Bridge
 #endif
 
         /// <summary>
-        /// 初始化SDK本地配置数据
+        /// Initialize SDK local configuration data
         /// </summary>
         /// <param name="config"></param>
         public static void Install(SDKConfig config)
@@ -553,7 +553,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 设置 RUM 配置
+        /// Set RUM configuration
         /// </summary>
         /// <param name="config"></param>
         public static void InitRUMConfig(RUMConfig config)
@@ -562,7 +562,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 设置 log 配置
+        /// Set log configuration
         /// </summary>
         /// <param name="config"></param>
         public static void InitLogConfig(LogConfig config)
@@ -571,7 +571,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        ///  设置 Trace 配置
+        ///  Set Trace configuration
         /// </summary>
         /// <param name="config"></param>
         public static void InitTraceConfig(TraceConfig config)
@@ -580,9 +580,9 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 绑定 RUM 用户信息
+        /// Bind RUM user information
         /// </summary>
-        /// <param name="userId">用户唯一id</param>
+        /// <param name="userId">User unique id</param>
         public static void BindUserData(string userId)
         {
             BindUserData(new UserData()
@@ -592,7 +592,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 绑定 RUM 用户信息
+        /// Bind RUM user information
         /// </summary>
         /// <param name="userData"></param>
         public static void BindUserData(UserData userData)
@@ -601,7 +601,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 解绑用户数据
+        /// Unbind user data
         /// </summary>
         public static async Task UnBindUserdata()
         {
@@ -609,7 +609,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 添加自定义全局参数。作用于 RUM、Log 数据
+        /// Add custom global parameters. Applies to RUM, Log data
         /// </summary>
         public static void AppendGlobalContext(Dictionary<string, object> property)
         {
@@ -617,7 +617,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 添加自定义 RUM 全局参数。作用于 RUM 数据
+        /// Add custom RUM global parameters. Applies to RUM data
         /// </summary>
         public static void AppendRUMGlobalContext(Dictionary<string, object> property)
         {
@@ -625,7 +625,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 添加自定义 RUM、Log 全局参数。作用于 Log 数据
+        /// Add custom RUM, Log global parameters. Applies to Log data
         /// </summary>
         public static void AppendLogGlobalContext(Dictionary<string, object> property)
         {
@@ -633,11 +633,11 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        ///  添加 Action 
+        ///   Add Action 
         /// </summary>
-        /// <param name="actionName">action 名称</param>
-        /// <param name="actionType">action 类型</param>
-        /// <param name="duartion">纳秒，持续时间</param>
+        /// <param name="actionName">action name</param>
+        /// <param name="actionType">action type</param>
+        /// <param name="duartion">nanoseconds, duration</param>
         public static void AddAction(string actionName, string actionType, long duartion)
         {
 
@@ -650,21 +650,21 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        ///  添加 Action 
+        ///   Add Action 
         /// </summary>
-        /// <param name="actionName"> action 名称</param>
-        /// <param name="actionType"> action 类型</param>
+        /// <param name="actionName"> action name</param>
+        /// <param name="actionType"> action type</param>
         public static void StartAction(string actionName, string actionType)
         {
             StartAction(actionName, actionType, null);
         }
 
         /// <summary>
-        /// 添加 Action
+        /// Add Action
         /// </summary>
-        /// <param name="actionName">action 名称</param>
-        /// <param name="actionType">action 类型</param>
-        /// <param name="property">附加属性参数</param>
+        /// <param name="actionName">action name</param>
+        /// <param name="actionType">action type</param>
+        /// <param name="property">Additional property parameters</param>
         public static void StartAction(string actionName, string actionType, Dictionary<string, object> property)
         {
             _InovkeMethod(KEY_METHOD_START_ACTION, JsonConvert.SerializeObject(new Dictionary<string, object>
@@ -677,10 +677,10 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 创建 View
+        /// Create View
         /// </summary>
-        /// <param name="viewName"> 当前页面名称</param>
-        /// <param name="loadTime">加载时间，纳秒</param>
+        /// <param name="viewName"> Current page name</param>
+        /// <param name="loadTime">Load time, nanoseconds</param>
         public static void CreateView(string viewName, long loadTime)
         {
             _InovkeMethod(KEY_METHOD_CREATE_VIEW, JsonConvert.SerializeObject(new Dictionary<string, object>
@@ -691,19 +691,19 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        ///  View 开始
+        ///  View start
         /// </summary>
-        /// <param name="viewName">当前页面名称</param>
+        /// <param name="viewName">Current page name</param>
         public static void StartView(string viewName)
         {
             StartView(viewName, null);
         }
 
         /// <summary>
-        /// View 开始
+        /// View start
         /// </summary>
-        /// <param name="viewName">当前页面名称</param>
-        /// <param name="property">附加属性参数</param>
+        /// <param name="viewName">Current page name</param>
+        /// <param name="property">Additional property parameters</param>
         public static void StartView(string viewName, Dictionary<string, object> property)
         {
             _InovkeMethod(KEY_METHOD_START_VIEW, JsonConvert.SerializeObject(new Dictionary<string, object>
@@ -714,7 +714,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// View 结束
+        /// View end
         /// </summary>
         public static void StopView()
         {
@@ -722,9 +722,9 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// View 结束
+        /// View end
         /// </summary>
-        /// <param name="property">附加属性参数</param>
+        /// <param name="property">Additional property parameters</param>
         public static void StopView(Dictionary<string, object> property)
         {
             _InovkeMethod(KEY_METHOD_STOP_VIEW, JsonConvert.SerializeObject(new Dictionary<string, object>
@@ -734,10 +734,10 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 添加错误信息
+        /// Add error information
         /// </summary>
-        /// <param name="log">日志</param>
-        /// <param name="message">消息</param>
+        /// <param name="log">Log</param>
+        /// <param name="message">Message</param>
         /// <returns></returns>
         public static async Task AddError(string log, string message, Dictionary<string, object> property)
         {
@@ -746,10 +746,10 @@ namespace FTSDK.Unity.Bridge
 
 
         /// <summary>
-        /// 添加错误信息
+        /// Add error information
         /// </summary>
-        /// <param name="log">日志</param>
-        /// <param name="message">消息</param>
+        /// <param name="log">Log</param>
+        /// <param name="message">Message</param>
         /// <returns></returns>
         public static async Task AddError(string log, string message)
         {
@@ -758,11 +758,11 @@ namespace FTSDK.Unity.Bridge
 
 
         /// <summary>
-        /// 添加错误信息
+        /// Add error information
         /// </summary>
-        /// <param name="log">日志</param>
-        /// <param name="errorType">错误类型</param>
-        /// <param name="message">消息</param>
+        /// <param name="log">Log</param>
+        /// <param name="errorType">Error type</param>
+        /// <param name="message">Message</param>
         /// <returns></returns>
         public static async Task AddError(string log, string message, string errorType)
         {
@@ -770,12 +770,12 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 添加错误信息
+        /// Add error information
         /// </summary>
-        /// <param name="log">日志</param>
-        /// <param name="message">消息</param>
-        /// <param name="errorType">错误类型</param>
-        /// <param name="property">附加属性参数</param>
+        /// <param name="log">Log</param>
+        /// <param name="message">Message</param>
+        /// <param name="errorType">Error type</param>
+        /// <param name="property">Additional property parameters</param>
         /// <returns></returns>
         public static async Task AddError(string log, string message, string errorType,
             Dictionary<string, object> property)
@@ -792,10 +792,10 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 添加长耗时任务
+        /// Add long duration task
         /// </summary>
-        /// <param name="log">日志内容</param>
-        /// <param name="duration">持续时间，纳秒</param>
+        /// <param name="log">Log content</param>
+        /// <param name="duration">Duration, nanoseconds</param>
         /// <returns></returns>
         public static async Task AddLongTask(string log, long duration)
         {
@@ -804,11 +804,11 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 添加长耗时任务
+        /// Add long duration task
         /// </summary>
-        /// <param name="log">日志内容</param>
-        /// <param name="duration">持续时间，纳秒</param>
-        /// <param name="property">附加属性参数</param>
+        /// <param name="log">Log content</param>
+        /// <param name="duration">Duration, nanoseconds</param>
+        /// <param name="property">Additional property parameters</param>
         /// <returns></returns>
         public static async Task AddLongTask(string log, long duration, Dictionary<string, object> property)
         {
@@ -822,9 +822,9 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        ///  resource 开始
+        ///  resource start
         /// </summary>
-        /// <param name="resourceId">资源 Id</param>
+        /// <param name="resourceId">Resource Id</param>
         /// <returns></returns>
         public static async Task StartResource(string resourceId)
         {
@@ -832,10 +832,10 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// resource 开始
+        /// resource start
         /// </summary>
-        /// <param name="resourceId">资源 Id</param>
-        /// <param name="property">附加属性参数</param>
+        /// <param name="resourceId">Resource Id</param>
+        /// <param name="property">Additional property parameters</param>
         /// <returns></returns>
         public static async Task StartResource(string resourceId, Dictionary<string, object> property)
         {
@@ -847,9 +847,9 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// resource 结束
+        /// resource end
         /// </summary>
-        /// <param name="resourceId">资源 Id</param>
+        /// <param name="resourceId">Resource Id</param>
         /// <returns></returns>
         public static async Task StopResource(string resourceId)
         {
@@ -857,10 +857,10 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// resource 结束
+        /// resource end
         /// </summary>
-        /// <param name="resourceId">资源 Id</param>
-        /// <param name="property">附加属性参数</param>
+        /// <param name="resourceId">Resource Id</param>
+        /// <param name="property">Additional property parameters</param>
         public static async Task StopResource(string resourceId, Dictionary<string, object> property)
         {
             await _InovkeMethodAsync(KEY_METHOD_STOP_RESOURCE, JsonConvert.SerializeObject(new Dictionary<string, object>
@@ -871,11 +871,11 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 添加网络传输内容和指标
+        /// Add network transmission content and metrics
         /// </summary>
-        /// <param name="resourceId">资源 Id</param>
-        /// <param name="resourceParams">数据传输内容</param>
-        /// <param name="netStatus">网络指标数据</param>
+        /// <param name="resourceId">Resource Id</param>
+        /// <param name="resourceParams">Data transmission content</param>
+        /// <param name="netStatus">Network metrics data</param>
         public static async Task AddResource(string resourceId, ResourceParams resourceParams)
         {
             await _InovkeMethodAsync(KEY_METHOD_ADD_RESOURCE, JsonConvert.SerializeObject(new Dictionary<string, object>
@@ -887,10 +887,10 @@ namespace FTSDK.Unity.Bridge
 
         }
         /// <summary>
-        /// 添加日志
+        /// Add log
         /// </summary>
-        /// <param name="log">日志内容</param>
-        /// <param name="level">日志等级 info，warning，error，critical，ok</param>
+        /// <param name="log">Log content</param>
+        /// <param name="level">Log level info, warning, error, critical, ok</param>
         /// <returns></returns>
         public static async Task AddLog(string log, LogLevel level)
         {
@@ -898,11 +898,11 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 添加日志
+        /// Add log
         /// </summary>
-        /// <param name="log">日志内容</param>
-        /// <param name="level">日志等级 info，warning，error，critical，ok</param>
-        /// <param name="property">附加属性参数</param>
+        /// <param name="log">Log content</param>
+        /// <param name="level">Log level info, warning, error, critical, ok</param>
+        /// <param name="property">Additional property parameters</param>
         /// <returns></returns>
         public static async Task AddLog(string log, LogLevel level, Dictionary<string, object> property)
         {
@@ -914,11 +914,11 @@ namespace FTSDK.Unity.Bridge
             }.WithoutNullValues(), JSON_HANDLER));
         }
         /// <summary>
-        /// 获取链路
+        /// Get link
         /// </summary>
-        /// <param name="resourceId">资源 Id</param>
-        /// <param name="url">url 地址</param>
-        /// <returns>json 字符</returns>
+        /// <param name="resourceId">Resource Id</param>
+        /// <param name="url">url address</param>
+        /// <returns>json string</returns>
 
         public static async Task<string> GetTraceHeader(string resourceId, string url)
         {
@@ -930,10 +930,10 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 获取链路 Id
+        /// Get link Id
         /// </summary>
-        /// <param name="url">url 地址</param>
-        /// <returns>json 字符</returns>
+        /// <param name="url">url address</param>
+        /// <returns>json string</returns>
         public static async Task<string> GetTraceHeaderWithUrl(string url)
         {
             return await GetTraceHeader(null, url);
@@ -941,7 +941,7 @@ namespace FTSDK.Unity.Bridge
 
 
         /// <summary>
-        /// 主动同步数据
+        /// Actively sync data
         /// </summary>
         public static async void flushSyncData()
         {
@@ -949,7 +949,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 清理未上报的缓存数据
+        /// Clear unreported cached data
         /// </summary>
         public static async void cleanAllData()
         {
@@ -958,7 +958,7 @@ namespace FTSDK.Unity.Bridge
 
 
         /// <summary>
-        /// SDK 释放
+        /// SDK release
         /// </summary>
         public static void DeInit()
         {
@@ -966,7 +966,7 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 异步跨平台传参
+        /// Asynchronous cross-platform parameter passing
         /// </summary>
         /// <param name="method"></param>
         /// <param name="json"></param>
@@ -986,10 +986,10 @@ namespace FTSDK.Unity.Bridge
         }
 
         /// <summary>
-        /// 负责跨平台各个方法的传参数
+        /// Responsible for cross-platform parameter passing for various methods
         /// </summary>
-        /// <param name="method">方法名</param>
-        /// <param name="json">json 格式参数</param>
+        /// <param name="method">Method name</param>
+        /// <param name="json">json format parameters</param>
         /// <returns></returns>
         private static string _InovkeMethod(string method, string json)
         {
@@ -1001,7 +1001,7 @@ namespace FTSDK.Unity.Bridge
         return Marshal.PtrToStringAnsi(ptr);
 #endif
 
-            // 在Android上调用Android插件的方法
+            // Call Android plugin methods on Android
 #if (UNITY_ANDROID && !UNITY_EDITOR)
 
             if (androidPlugin == null)

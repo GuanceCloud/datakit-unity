@@ -19,12 +19,12 @@ namespace FTSDK.Unity
             {
                 _Instance = this;
                 StartCoroutine(_LoadPrefabs());
-                // 在此之后，当前对象就是唯一的实例
+                // After this, the current object is the only instance
                 DontDestroyOnLoad(gameObject);
             }
             else if (_Instance != this)
             {
-                // 如果实例已经存在并且不是当前对象，则销毁当前对象
+                // If an instance already exists and is not the current object, destroy the current object
                 Destroy(gameObject);
                 // Instantiate(ViewObserver);
             }
@@ -32,7 +32,7 @@ namespace FTSDK.Unity
 
 
         /// <summary>
-        ///  SDK 初始化，按需更改 SDK 初始化配置
+        ///  SDK initialization, modify SDK initialization configuration as needed
         /// </summary>
         private void _InitSDK()
         {
@@ -48,7 +48,7 @@ namespace FTSDK.Unity
 
             });
 
-            //对应修改  androidAppId 和 iOSAppId
+            // Modify androidAppId and iOSAppId accordingly
             FTUnityBridge.InitRUMConfig(new RUMConfig()
             {
                 androidAppId = "appid_androidAppId",
@@ -84,7 +84,7 @@ namespace FTSDK.Unity
         IEnumerator _LoadPrefabs()
         {
             yield return Instantiate(MainThreadDispatch);
-            // 如果是 Native 工程已集成 SDK，可以跳过这个一步初始化，避免重复设置
+            // If the native project has already integrated the SDK, you can skip this initialization step to avoid duplicate settings
             _InitSDK();
             yield return Instantiate(ViewObserver);
         }
@@ -103,7 +103,7 @@ namespace FTSDK.Unity
 
         void LogCallBack(string condition, string stackTrace, LogType type)
         {
-            ///开启崩溃监听和日志 Debug.Log 日志监听取消以下代码注释
+            /// Enable crash monitoring and log Debug.Log monitoring by uncommenting the following code
             // if (type == LogType.Exception)
             // {
             //     FTUnityBridge.AddError(stackTrace, condition);

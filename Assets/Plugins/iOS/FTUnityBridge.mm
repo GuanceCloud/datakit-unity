@@ -10,8 +10,8 @@
 #import <FTMobileSDK/FTMobileConfig+Private.h>
 #import <FTMobileSDK/FTConstants.h>
 
-/// c 字符串 转换 oc 字符串
-/// - Parameter string: c 字符串
+/// Convert c string to oc string
+/// - Parameter string: c string
 NSString* CreateNSString (const char* string)
 {
     if (string)
@@ -19,8 +19,8 @@ NSString* CreateNSString (const char* string)
     else
         return [NSString stringWithUTF8String: ""];
 }
-/// 字符串拷贝
-/// - Parameter string: 字符串
+/// String copy
+/// - Parameter string: string
 char* MakeStringCopy (const char* string)
 {
     if (string == NULL)
@@ -34,15 +34,15 @@ NSDictionary *RemoveNull(NSDictionary *dict){
     NSMutableDictionary *mdic = [NSMutableDictionary dictionary];
     for (NSString *strKey in dict.allKeys) {
         NSValue *value = dict[strKey];
-        // 删除NSDictionary中的NSNull，再保存进字典
+        // Remove NSNull from NSDictionary, then save to dictionary
         if (![value isKindOfClass:NSNull.class]) {
             [mdic setValue:value forKey:strKey];
         }
     }
     return mdic;
 }
-/// json 字符串转字典
-/// - Parameter jsonString: json 字符串
+/// Convert json string to dictionary
+/// - Parameter jsonString: json string
 NSDictionary* JsonStringToDict(const char* jsonString){
     if (jsonString){
         NSData *jsonData = [[NSString stringWithUTF8String: jsonString] dataUsingEncoding:NSUTF8StringEncoding];
@@ -55,13 +55,13 @@ NSDictionary* JsonStringToDict(const char* jsonString){
 extern "C"{
 
 #pragma mark ========== SDK INIT/DeInit ==========
-/// SDK 初始化配置
-/// - Parameter json: 配置项
-/// serverUrl：datakit 安装地址 URL 地址
-/// env：数据上传环境，默认 prod
-/// serviceName：应用服务名，默认 android df_rum_android, iOS df_rum_ios
-/// debug: 是否开启 Debug 模式
-/// globalContext: 自定义全局参数
+/// SDK initialization configuration
+/// - Parameter json: configuration items
+/// serverUrl: datakit installation address URL
+/// env: data upload environment, default prod
+/// serviceName: application service name, default android df_rum_android, iOS df_rum_ios
+/// debug: whether to enable Debug mode
+/// globalContext: custom global parameters
 void install(const char* json){
     NSDictionary *params = JsonStringToDict(json);
     if(params == nil){
@@ -157,14 +157,14 @@ void install(const char* json){
     }
     [FTMobileAgent startWithConfigOptions:config];
 }
-/// SDK 关闭
+/// SDK shutdown
 void deInit(){
     [FTMobileAgent shutDown];
 }
 #pragma mark ========== Bind/Unbind User ==========
 
-/// 绑定用户
-/// - Parameter json: 参数
+/// Bind user
+/// - Parameter json: parameters
 /// userId:
 /// userName:
 /// userEmail:
@@ -180,7 +180,7 @@ void bindUserData(const char* json){
     NSDictionary *extra = [user objectForKey:@"extra"];
     [[FTMobileAgent sharedInstance] bindUserWithUserID:userId userName:userName userEmail:userEmail extra:extra];
 }
-/// 解绑用户
+/// Unbind user
 void unbindUserdata(){
     [[FTMobileAgent sharedInstance] unbindUser];
 }
@@ -218,18 +218,18 @@ void clearAllData(){
 }
 
 #pragma mark ========== RUM ==========
-/// 初始化 RUM 配置
-/// - Parameter rumConfigJson: 配置项
-/// iOSAppId：appId
-/// sampleRate：采样率
+/// Initialize RUM configuration
+/// - Parameter rumConfigJson: configuration items
+/// iOSAppId: appId
+/// sampleRate: sampling rate
 /// sessionOnErrorSampleRate
-/// enableNativeUserResource：是否进行 `Native Resource` 自动追踪
-/// enableNativeUserAction：是否进行 `Native Action` 追踪，包括冷热启动
-/// enableNativeUserView：是否进行 `Native View` 自动追踪
-/// extraMonitorTypeWithError：错误监控补充类型
-/// deviceMonitorType: 页面监控补充类型
-/// detectFrequency: 页面监控频率
-/// globalContext: 自定义 RUM 全局参数
+/// enableNativeUserResource: whether to perform `Native Resource` automatic tracking
+/// enableNativeUserAction: whether to perform `Native Action` tracking, including cold and hot startup
+/// enableNativeUserView: whether to perform `Native View` automatic tracking
+/// extraMonitorTypeWithError: error monitoring supplement types
+/// deviceMonitorType: page monitoring supplement types
+/// detectFrequency: page monitoring frequency
+/// globalContext: custom RUM global parameters
 void initRUMConfig(const char* rumConfigJson){
     NSDictionary *params = JsonStringToDict(rumConfigJson);
     if(params == nil){
@@ -356,11 +356,11 @@ void initRUMConfig(const char* rumConfigJson){
     }
     [[FTMobileAgent sharedInstance] startRumWithConfigOptions:rumConfig];
 }
-/// 添加 Action 事件
-/// - Parameter json: 参数
-/// actionName: 事件名称
-/// actionType: 事件类型
-/// property: 事件上下文(可选)
+/// Add Action event
+/// - Parameter json: parameters
+/// actionName: event name
+/// actionType: event type
+/// property: event context (optional)
 void startAction(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
@@ -373,10 +373,10 @@ void startAction(const char* json){
         [FTExternalDataManager.sharedManager startAction:actionName actionType:actionType property:property];
     }
 }
-/// 创建页面
-/// - Parameter json: 参数
-/// viewName：页面名称
-/// loadTime: 加载时间，纳秒
+/// Create page
+/// - Parameter json: parameters
+/// viewName: page name
+/// loadTime: load time, nanoseconds
 void createView(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
@@ -387,10 +387,10 @@ void createView(const char* json){
     [FTExternalDataManager.sharedManager onCreateView:viewName loadTime:loadTime];
 }
 
-/// 进入页面
-/// - Parameter json: 参数
-/// viewName：页面名称
-/// property：事件上下文(可选)
+/// Enter page
+/// - Parameter json: parameters
+/// viewName: page name
+/// property: event context (optional)
 void startView(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
@@ -401,9 +401,9 @@ void startView(const char* json){
     [FTExternalDataManager.sharedManager startViewWithName:viewName property:property];
 }
 
-/// 离开页面
-/// - Parameter json: 参数
-/// property：事件上下文(可选)
+/// Leave page
+/// - Parameter json: parameters
+/// property: event context (optional)
 void stopView(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict != nil){
@@ -414,10 +414,10 @@ void stopView(const char* json){
     }
 }
 
-/// HTTP 请求开始
-/// - Parameter json: 参数
-/// resourceId: 请求唯一标识
-/// property: 事件上下文(可选)
+/// HTTP request start
+/// - Parameter json: parameters
+/// resourceId: request unique identifier
+/// property: event context (optional)
 void startResource(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
@@ -428,10 +428,10 @@ void startResource(const char* json){
     [FTExternalDataManager.sharedManager startResourceWithKey:resourceId property:property];
 }
 
-/// HTTP 请求结束
-/// - Parameter json: 参数
-/// resourceId: 请求唯一标识
-/// property: 事件上下文(可选)
+/// HTTP request end
+/// - Parameter json: parameters
+/// resourceId: request unique identifier
+/// property: event context (optional)
 void stopResource(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
@@ -441,17 +441,17 @@ void stopResource(const char* json){
     NSDictionary *property = [configDict objectForKey:@"property"];
     [FTExternalDataManager.sharedManager stopResourceWithKey:resourceId property:property];
 }
-/// 添加网络传输内容
-/// - Parameter json: 参数
-/// resourceId: 请求唯一标识
-/// params：请求性能数据
+/// Add network transmission content
+/// - Parameter json: parameters
+/// resourceId: request unique identifier
+/// params: request performance data
 ///       * url
 ///       * requestHeader
 ///       * responseHeader
 ///       * resourceMethod
 ///       * responseBody
 ///       * resourceStatus
-/// netStatusBean：请求相关数据
+/// netStatusBean: request related data
 ///       * tcpTime: tcpEndTime-tcpStartTime
 ///       * dnsTime: dnsEndTime-dnsStartTime
 ///       * sslTime: sslEndTime-sslStartTime
@@ -518,13 +518,13 @@ void addResource(const char* json){
     [FTExternalDataManager.sharedManager addResourceWithKey:resourceId metrics:metrics content:content];
 }
 
-/// 添加错误事件
-/// - Parameter json: 参数
-/// log：错误日志
-/// message：错误信息
-/// errorType：错误类型
-/// state：程序运行状态（run、startup、unknown）
-/// property: 事件上下文(可选)
+/// Add error event
+/// - Parameter json: parameters
+/// log: error log
+/// message: error message
+/// errorType: error type
+/// state: program running state (run, startup, unknown)
+/// property: event context (optional)
 void addError(const char*json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
@@ -549,11 +549,11 @@ void addError(const char*json){
         [FTExternalDataManager.sharedManager addErrorWithType:errorType message:message stack:log property:property];
     }
 }
-/// 添加 longtask
-/// - Parameter json: 参数
-/// log：卡顿日志
-/// duration：卡顿时长
-/// property: 事件上下文(可选)
+/// Add longtask
+/// - Parameter json: parameters
+/// log: stuttering log
+/// duration: stuttering duration
+/// property: event context (optional)
 void addLongTask(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
@@ -565,14 +565,14 @@ void addLongTask(const char* json){
     [FTExternalDataManager.sharedManager addLongTaskWithStack:log duration:duration property:property];
 }
 #pragma mark ========== Log ==========
-/// 初始化 Log
-/// - Parameter logConfigJson: 配置项
-/// sampleRate：采样率
-/// enableCustomLog：是否开启自定义日志
-/// enableLinkRumData：是否与 RUM 关联
-/// logLevelFilters：日志等级过滤
-/// discardStrategy：日志丢弃策略
-/// globalContext：自定义日志全局参数
+/// Initialize Log
+/// - Parameter logConfigJson: configuration items
+/// sampleRate: sampling rate
+/// enableCustomLog: whether to enable custom logs
+/// enableLinkRumData: whether to associate with RUM
+/// logLevelFilters: log level filtering
+/// discardStrategy: log discard strategy
+/// globalContext: custom log global parameters
 void initLogConfig(const char* logConfigJson){
     NSDictionary *params = JsonStringToDict(logConfigJson);
     if(params == nil){
@@ -590,7 +590,7 @@ void initLogConfig(const char* logConfigJson){
     }
     if ([params.allKeys containsObject:@"discardStrategy"]) {
         NSString *type = params[@"discardStrategy"];
-        //`discard`丢弃新数据（默认）、`discardOldest`
+        //`discard` discard new data (default), `discardOldest`
         if([type isEqualToString:@"discardOldest"]){
             config.discardType = FTDiscardOldest;
         }else{
@@ -604,7 +604,7 @@ void initLogConfig(const char* logConfigJson){
             NSString *level;
             NSMutableArray *logLevelFilters = [NSMutableArray new];
             while ((level = enumerator.nextObject)) {
-                //`info`提示、`warning`警告、`error`错误、`critical`、`ok`恢复
+                //`info` prompt, `warning` warning, `error` error, `critical`, `ok` recovery
                 if([level isEqualToString:@"info"]){
                     [logLevelFilters addObject:@(FTStatusInfo)];
                 }else if([level isEqualToString:@"warning"]){
@@ -629,11 +629,11 @@ void initLogConfig(const char* logConfigJson){
     [[FTMobileAgent sharedInstance] startLoggerWithConfigOptions:config];
 }
 
-/// 日志打印
-/// - Parameter json: 参数
-/// log：日志内容
-/// level：日志等级
-/// property：事件上下文(可选)
+/// Log printing
+/// - Parameter json: parameters
+/// log: log content
+/// level: log level
+/// property: event context (optional)
 void addLog(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
@@ -658,12 +658,12 @@ void addLog(const char* json){
 }
 #pragma mark ========== Trace ==========
 
-/// 初始化 Trace
-/// - Parameter traceConfigJson: 配置项
-/// sampleRate：采样率
-/// traceType：链路类型
-/// enableLinkRUMData：是否与 `RUM` 数据关联
-/// enableAutoTrace：是否开启原生网络自动追踪
+/// Initialize Trace
+/// - Parameter traceConfigJson: configuration items
+/// sampleRate: sampling rate
+/// traceType: link type
+/// enableLinkRUMData: whether to associate with `RUM` data
+/// enableAutoTrace: whether to enable native network automatic tracking
 void initTraceConfig(const char* traceConfigJson){
     NSDictionary *params = JsonStringToDict(traceConfigJson);
     if(params == nil){
@@ -675,7 +675,7 @@ void initTraceConfig(const char* traceConfigJson){
     }
     if ([params.allKeys containsObject:@"traceType"]) {
         NSString *type =  params[@"traceType"];
-        //`ddTrace`（默认）、`zipkinMultiHeader`、`zipkinSingleHeader`、`traceparent`、`skywalking`、`jaeger`
+        //`ddTrace` (default), `zipkinMultiHeader`, `zipkinSingleHeader`, `traceparent`, `skywalking`, `jaeger`
         if([type isEqualToString:@"ddTrace"]){
             trace.networkTraceType = FTNetworkTraceTypeDDtrace;
         }else if ([type isEqualToString:@"zipkinMultiHeader"]){
@@ -698,10 +698,10 @@ void initTraceConfig(const char* traceConfigJson){
     }
     [[FTMobileAgent sharedInstance] startTraceWithConfigOptions:trace];
 }
-/// 获取 trace 需要添加的请求头
-/// - Parameter json: 参数
-/// resourceId：请求唯一标识
-/// url：请求 URL
+/// Get trace headers that need to be added
+/// - Parameter json: parameters
+/// resourceId: request unique identifier
+/// url: request URL
 const char* getTraceHeader(const char* json){
     NSDictionary *configDict = JsonStringToDict(json);
     if(configDict == nil){
