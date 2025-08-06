@@ -47,7 +47,7 @@ public class ClickEvent : MonoBehaviour
     public void NetRequest()
     {
         String resourceId = "unique id";
-        String url = "https://www.guance.com";
+        String url = "https://httpbin.org/status/200";
         Task.Run(async () =>
         {
             using (HttpClient client = new HttpClient())
