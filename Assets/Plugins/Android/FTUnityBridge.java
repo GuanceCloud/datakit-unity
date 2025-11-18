@@ -17,7 +17,6 @@ import com.ft.sdk.FTSDKConfig;
 import com.ft.sdk.FTSdk;
 import com.ft.sdk.FTTraceConfig;
 import com.ft.sdk.FTTraceManager;
-import com.ft.sdk.InnerClassProxy;
 import com.ft.sdk.LineDataModifier;
 import com.ft.sdk.LogCacheDiscard;
 import com.ft.sdk.RUMCacheDiscard;
@@ -233,11 +232,8 @@ public class FTUnityBridge {
                     }
                 }
             });
-
-            InnerClassProxy.addPkgInfo(sdkConfig, "unity", (String) map.get("sdkVersion"));
-
-            FTSdk.install(sdkConfig);
         }
+        FTSdk.install(sdkConfig);
     }
 
     /**

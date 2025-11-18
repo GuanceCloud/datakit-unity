@@ -152,9 +152,6 @@ void install(const char* json){
         config.service = params[@"serviceName"];
     }
 
-    if ([params.allKeys containsObject:@"sdkVersion"]) {
-        [config addPkgInfo:@"unity" value: params[@"sdkVersion"]];
-    }
     [FTMobileAgent startWithConfigOptions:config];
 }
 /// SDK shutdown

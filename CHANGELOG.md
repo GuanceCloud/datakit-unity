@@ -1,3 +1,7 @@
+# 1.1.0-alpha.2
+* Added bridgeContext feature
+* Fixed SDK Config initialization error
+
 # 1.1.0-alpha.1
 * Compatible with Android ft-sdk 1.6.11, ft-native 1.1.1, iOS 1.5.16
 * Support reporting collected data through public network dataway

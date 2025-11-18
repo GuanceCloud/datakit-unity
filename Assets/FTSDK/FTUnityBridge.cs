@@ -476,7 +476,25 @@ namespace FTSDK.Unity.Bridge
     /// </summary>
     public class FTUnityBridge
     {
-        public const string SDK_VERSION = "1.1.0-alpha.1";
+        public const string SDK_VERSION = "1.1.0-alpha.2";
+        
+        /// <summary>
+        /// Thread-safe static dictionary for storing bridge context that will be automatically merged with property parameters
+        /// </summary>
+        private static readonly Dictionary<string, object> _bridgeContext = new Dictionary<string, object>();
+        
+        /// <summary>
+        /// Lock object for thread-safe access to the bridge context dictionary
+        /// </summary>
+        private static readonly object _contextLock = new object();
+        
+        /// <summary>
+        /// Static constructor to initialize bridge context with SDK version information
+        /// </summary>
+        static FTUnityBridge()
+        {
+            _bridgeContext["sdk_bridge_info"] = $"{{\"unity\":\"{SDK_VERSION}\"}}";
+        }
         private const string KEY_METHOD_INSTALL = "Install";
         private const string KEY_METHOD_INIT_RUM_CONFIG = "InitRUMConfig";
         private const string KEY_METHOD_INIT_LOG_CONFIG = "InitLogConfig";
@@ -538,6 +556,67 @@ namespace FTSDK.Unity.Bridge
         private static AndroidJavaObject androidPlugin;
 
 #endif
+
+        /// <summary>
+        /// Append context data to the bridge context dictionary
+        /// This context will be automatically merged with all property parameters in subsequent method calls
+        /// </summary>
+        /// <param name="context">Dictionary containing context data to be merged</param>
+        public static void AppendBridgeContext(Dictionary<string, object> context)
+        {
+            if (context == null || context.Count == 0)
+                return;
+                
+            lock (_contextLock)
+            {
+                foreach (var kvp in context)
+                {
+                    if (kvp.Value != null)
+                    {
+                        _bridgeContext[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+        }
+        
+        
+        /// <summary>
+        /// Get a copy of the current bridge context
+        /// </summary>
+        /// <returns>Copy of the current bridge context dictionary</returns>
+        public static Dictionary<string, object> GetBridgeContext()
+        {
+            lock (_contextLock)
+            {
+                return new Dictionary<string, object>(_bridgeContext);
+            }
+        }
+        
+        /// <summary>
+        /// Merge bridge context with property parameters
+        /// </summary>
+        /// <param name="property">Original property parameters</param>
+        /// <returns>Merged property parameters including bridge context</returns>
+        private static Dictionary<string, object> MergeWithBridgeContext(Dictionary<string, object> property)
+        {
+            if (_bridgeContext.Count == 0)
+                return property;
+                
+            var mergedProperty = property != null ? new Dictionary<string, object>(property) : new Dictionary<string, object>();
+            
+            lock (_contextLock)
+            {
+                foreach (var kvp in _bridgeContext)
+                {
+                    if (!mergedProperty.ContainsKey(kvp.Key))
+                    {
+                        mergedProperty[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+            
+            return mergedProperty;
+        }
 
         /// <summary>
         /// Initialize SDK local configuration data
@@ -667,11 +746,12 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">Additional property parameters</param>
         public static void StartAction(string actionName, string actionType, Dictionary<string, object> property)
         {
+            var mergedProperty = MergeWithBridgeContext(property);
             _InovkeMethod(KEY_METHOD_START_ACTION, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
                 {"actionName" , actionName},
                 {"actionType",actionType},
-                {"property" , property}
+                {"property" , mergedProperty}
             }.WithoutNullValues(), JSON_HANDLER));
 
         }
@@ -706,10 +786,11 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">Additional property parameters</param>
         public static void StartView(string viewName, Dictionary<string, object> property)
         {
+            var mergedProperty = MergeWithBridgeContext(property);
             _InovkeMethod(KEY_METHOD_START_VIEW, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
                 {"viewName" , viewName },
-                {"property" , property },
+                {"property" , mergedProperty },
             }.WithoutNullValues(), JSON_HANDLER));
         }
 
@@ -727,9 +808,10 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">Additional property parameters</param>
         public static void StopView(Dictionary<string, object> property)
         {
+            var mergedProperty = MergeWithBridgeContext(property);
             _InovkeMethod(KEY_METHOD_STOP_VIEW, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-               {"property" , property },
+               {"property" , mergedProperty },
             }.WithoutNullValues(), JSON_HANDLER));
         }
 
@@ -741,7 +823,8 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task AddError(string log, string message, Dictionary<string, object> property)
         {
-            await AddError(log, message, DEFAULT_ERROR_TYPE, property);
+            var mergedProperty = MergeWithBridgeContext(property);
+            await AddError(log, message, DEFAULT_ERROR_TYPE, mergedProperty);
         }
 
 
@@ -780,6 +863,7 @@ namespace FTSDK.Unity.Bridge
         public static async Task AddError(string log, string message, string errorType,
             Dictionary<string, object> property)
         {
+            var mergedProperty = MergeWithBridgeContext(property);
             string state = "run";
             await _InovkeMethodAsync(KEY_METHOD_ADD_ERROR, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
@@ -787,7 +871,7 @@ namespace FTSDK.Unity.Bridge
                 {"message" , message },
                 {"errorType" , errorType },
                 {"state" , state },
-                {"property" , property }
+                {"property" , mergedProperty }
             }, JSON_HANDLER));
         }
 
@@ -812,11 +896,12 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task AddLongTask(string log, long duration, Dictionary<string, object> property)
         {
+            var mergedProperty = MergeWithBridgeContext(property);
             await _InovkeMethodAsync(KEY_METHOD_ADD_LONG_TASK, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
                 {"log" , log },
                 {"duration" , duration},
-                {"property" , property}
+                {"property" , mergedProperty}
             }.WithoutNullValues(), JSON_HANDLER));
 
         }
@@ -839,10 +924,11 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task StartResource(string resourceId, Dictionary<string, object> property)
         {
+            var mergedProperty = MergeWithBridgeContext(property);
             await _InovkeMethodAsync(KEY_METHOD_START_RESOURCE, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
                 {"resourceId" , resourceId},
-                {"property" , property},
+                {"property" , mergedProperty},
             }.WithoutNullValues(), JSON_HANDLER));
         }
 
@@ -863,10 +949,11 @@ namespace FTSDK.Unity.Bridge
         /// <param name="property">Additional property parameters</param>
         public static async Task StopResource(string resourceId, Dictionary<string, object> property)
         {
+            var mergedProperty = MergeWithBridgeContext(property);
             await _InovkeMethodAsync(KEY_METHOD_STOP_RESOURCE, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
                 {"resourceId" , resourceId},
-                {"property" , property},
+                {"property" , mergedProperty},
             }.WithoutNullValues(), JSON_HANDLER));
         }
 
@@ -906,11 +993,12 @@ namespace FTSDK.Unity.Bridge
         /// <returns></returns>
         public static async Task AddLog(string log, LogLevel level, Dictionary<string, object> property)
         {
+            var mergedProperty = MergeWithBridgeContext(property);
             await _InovkeMethodAsync(KEY_METHOD_ADD_LOG, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
                 {"log" , log},
                 {"level" , level},
-                {"property" , property},
+                {"property" , mergedProperty},
             }.WithoutNullValues(), JSON_HANDLER));
         }
         /// <summary>
