@@ -717,14 +717,50 @@ namespace FTSDK.Unity.Bridge
         /// <param name="actionName">action name</param>
         /// <param name="actionType">action type</param>
         /// <param name="duartion">nanoseconds, duration</param>
+        public static void AddAction(string actionName, string actionType)
+        {
+            AddAction(actionName, actionType, 0, null);
+        }
+
+        /// <summary>
+        ///   Add Action 
+        /// </summary>
+        /// <param name="actionName">action name</param>
+        /// <param name="actionType">action type</param>
+        /// <param name="duartion">nanoseconds, duration</param>
         public static void AddAction(string actionName, string actionType, long duartion)
         {
+            AddAction(actionName, actionType, duartion, null);
+        }
 
+        /// <summary>
+        ///   Add Action 
+        /// </summary>
+        /// <param name="actionName">action name</param>
+        /// <param name="actionType">action type</param>
+        /// <param name="duartion">nanoseconds, duration</param>
+        public static void AddAction(string actionName, string actionType, Dictionary<string, object> property)
+        {
+            AddAction(actionName, actionType, 0, property);
+        }
+
+        /// <summary>
+        ///   Add Action 
+        /// </summary>
+        /// <param name="actionName">action name</param>
+        /// <param name="actionType">action type</param>
+        /// <param name="duartion">nanoseconds, duration</param>
+        /// <param name="property">Additional property parameters</param>
+        public static void AddAction(string actionName, string actionType, long duration, Dictionary<string, object> property)
+        {
+
+            var mergedProperty = MergeWithBridgeContext(property);
             _InovkeMethod(KEY_METHOD_ADD_ACTION, JsonConvert.SerializeObject(new Dictionary<string, object>
             {
                 {"actionName" , actionName},
                 {"actionType",actionType},
-                {"duration" , duartion}
+                {"duration" , duration},
+                {"property" , mergedProperty}
             }, JSON_HANDLER));
         }
 

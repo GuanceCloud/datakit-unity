@@ -477,8 +477,10 @@ public class FTUnityBridge {
     private static void addAction(JSONObject data) {
         String actionName = data.optString("actionName");
         String actionType = data.optString("actionType");
+        JSONObject property = data.optJSONObject("property");
+        HashMap<String, Object> params = convertJSONtoHashMap(property);
         long duration = data.optLong("duration");
-        FTRUMGlobalManager.get().addAction(actionName, actionType, duration);
+        FTRUMGlobalManager.get().addAction(actionName, actionType, duration, params);
     }
 
     /**
