@@ -18,7 +18,7 @@ WORKSPACE_PATH=$2
 # Unity command line tool path
 UNITY_INSTALL_PATH=$3
 
-# OSS base path, e.g. oss://zhuyun-static-files-production
+# OSS base path
 OSS_BASE_PATH=$4
 
 # Export unitypackage 
